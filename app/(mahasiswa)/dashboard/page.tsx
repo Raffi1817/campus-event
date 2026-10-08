@@ -1,0 +1,92 @@
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { connection } from 'next/server'
+import { Navbar } from '@/components/navbar'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Calendar, Ticket, Bell } from 'lucide-react'
+
+export const instant = false
+
+export default async function MahasiswaDashboard() {
+  await connection()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/login')
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single()
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <Navbar
+        user={{
+          fullName: profile?.full_name || 'Mahasiswa',
+          role: profile?.role || 'MAHASISWA',
+          email: user.email || '',
+        }}
+      />
+      <main className="container mx-auto p-4 md:p-6 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard Mahasiswa</h1>
+          <p className="text-muted-foreground mt-1">
+            Selamat datang kembali, {profile?.full_name}. Pantau pendaftaran dan tiket event Anda di sini.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Event Diikuti</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">0</div>
+              <p className="text-xs text-muted-foreground mt-1">Pendaftaran aktif</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Tiket Aktif</CardTitle>
+              <Ticket className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">0</div>
+              <p className="text-xs text-muted-foreground mt-1">Siap untuk check-in</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Notifikasi</CardTitle>
+              <Bell className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">0</div>
+              <p className="text-xs text-muted-foreground mt-1">Pemberitahuan belum dibaca</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Status Autentikasi (Iterasi 2)</CardTitle>
+            <CardDescription>Informasi akun yang saat ini terautentikasi</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <div><span className="font-semibold">NIM:</span> {profile?.nim || '-'}</div>
+            <div><span className="font-semibold">Email:</span> {profile?.email}</div>
+            <div><span className="font-semibold">Role:</span> {profile?.role}</div>
+            <div><span className="font-semibold">Status:</span> {profile?.is_active ? 'Aktif' : 'Nonaktif'}</div>
+          </CardContent>
+        </Card>
+      </main>
+    </div>
+  )
+}
