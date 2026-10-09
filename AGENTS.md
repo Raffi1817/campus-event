@@ -98,7 +98,7 @@ npx tsx scripts/seed.ts          # seed data sintetis (butuh .env.local)
 (skenario T1–T22 di `SPEC_ADDENDUM.md` bagian 10). Prioritas rendah (export, upload poster, QR scanner) hanya jika semua selesai.
 
 ## Status saat ini
-- [x] Iterasi 1  - [x] Iterasi 2  - [ ] Iterasi 3  - [ ] Seed  - [ ] Iterasi 4
+- [x] Iterasi 1  - [x] Iterasi 2  - [x] Iterasi 3  - [ ] Seed  - [ ] Iterasi 4
 - [ ] Iterasi 5  - [ ] Iterasi 6  - [ ] Iterasi 7  - [ ] Iterasi 8
 (Perbarui centang ini setiap iterasi selesai.)
 
