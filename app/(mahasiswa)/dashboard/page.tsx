@@ -3,7 +3,9 @@ import { redirect } from 'next/navigation'
 import { connection } from 'next/server'
 import { Navbar } from '@/components/navbar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Calendar, Ticket, Bell } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Calendar, Ticket, Bell, Compass, ArrowRight } from 'lucide-react'
+import Link from 'next/link'
 
 export const instant = false
 
@@ -47,7 +49,7 @@ export default async function MahasiswaDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground mt-1">Pendaftaran aktif</p>
+              <p className="text-xs text-muted-foreground mt-1">Pendaftaran aktif (Iterasi 4)</p>
             </CardContent>
           </Card>
 
@@ -58,7 +60,7 @@ export default async function MahasiswaDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground mt-1">Siap untuk check-in</p>
+              <p className="text-xs text-muted-foreground mt-1">Siap untuk check-in (Iterasi 5)</p>
             </CardContent>
           </Card>
 
@@ -69,17 +71,39 @@ export default async function MahasiswaDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground mt-1">Pemberitahuan belum dibaca</p>
+              <p className="text-xs text-muted-foreground mt-1">Pemberitahuan belum dibaca (Iterasi 7)</p>
             </CardContent>
           </Card>
         </div>
 
-        <Card className="mt-6">
+        {/* Akses Cepat Jelajah Event (Iterasi 3) */}
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Compass className="h-5 w-5 text-primary" />
+              <span>Jelajah Event Kampus</span>
+            </CardTitle>
+            <CardDescription>
+              Temukan kegiatan seminar, lomba, pelatihan, dan workshop menarik yang sedang dibuka di kampus.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/events">
+              <Button className="gap-2">
+                <span>Buka Katalog Event</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader>
-            <CardTitle>Status Autentikasi (Iterasi 2)</CardTitle>
-            <CardDescription>Informasi akun yang saat ini terautentikasi</CardDescription>
+            <CardTitle>Profil Mahasiswa</CardTitle>
+            <CardDescription>Informasi akun mahasiswa terdaftar</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
+            <div><span className="font-semibold">Nama:</span> {profile?.full_name}</div>
             <div><span className="font-semibold">NIM:</span> {profile?.nim || '-'}</div>
             <div><span className="font-semibold">Email:</span> {profile?.email}</div>
             <div><span className="font-semibold">Role:</span> {profile?.role}</div>
