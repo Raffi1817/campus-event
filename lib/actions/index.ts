@@ -9,3 +9,4 @@ export {
 } from './events'
 export { registerEventAction, cancelRegistrationAction } from './registrations'
 export { payRegistrationAction, confirmPaymentAction } from './payments'
+export { checkInAction } from './checkin'

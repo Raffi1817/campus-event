@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import { connection } from 'next/server'
 import { Navbar } from '@/components/navbar'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { formatCurrency, formatDate, formatTime } from '@/lib/utils/format'
 import { ConfirmPaymentDialog } from '@/components/shared/payments'
@@ -18,6 +19,7 @@ import {
   XCircle,
   Mail,
   GraduationCap,
+  QrCode,
 } from 'lucide-react'
 
 export const instant = false
@@ -66,7 +68,7 @@ export default async function EventParticipantsPage({ params }: EventParticipant
     redirect('/panitia/events')
   }
 
-  // Ambil daftar peserta (registrations berelasi dengan profiles dan payments)
+  // Ambil daftar peserta (registrations berelasi dengan profiles, payments, dan tickets/checkins)
   const { data: rawParticipants } = await supabase
     .from('registrations')
     .select(`
@@ -84,6 +86,15 @@ export default async function EventParticipantsPage({ params }: EventParticipant
         method,
         status,
         paid_at
+      ),
+      ticket:tickets (
+        id,
+        ticket_code,
+        status,
+        checkins (
+          id,
+          checked_in_at
+        )
       )
     `)
     .eq('event_id', id)
@@ -104,6 +115,21 @@ export default async function EventParticipantsPage({ params }: EventParticipant
       method: string | null
       status: 'PENDING' | 'PAID' | 'FAILED'
       paid_at: string | null
+    } | null
+    ticket: {
+      id: string
+      ticket_code: string
+      status: string
+      checkins:
+        | {
+            id: string
+            checked_in_at: string
+          }[]
+        | {
+            id: string
+            checked_in_at: string
+          }
+        | null
     } | null
   }
 
@@ -155,6 +181,14 @@ export default async function EventParticipantsPage({ params }: EventParticipant
             <ArrowLeft className="h-4 w-4" />
             <span>Kembali ke Daftar Event</span>
           </Link>
+          <div className="flex items-center gap-2">
+            <Link href={`/panitia/events/${id}/checkin`}>
+              <Button size="sm" className="gap-1.5 text-xs h-9 font-semibold">
+                <QrCode className="h-4 w-4" />
+                <span>Buka Meja Check-in</span>
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Ringkasan Header Event */}
@@ -251,6 +285,7 @@ export default async function EventParticipantsPage({ params }: EventParticipant
                       <th className="px-4 py-3 font-semibold">Mahasiswa</th>
                       <th className="px-4 py-3 font-semibold">NIM</th>
                       <th className="px-4 py-3 font-semibold">Status Bayar</th>
+                      <th className="px-4 py-3 font-semibold">Presensi</th>
                       <th className="px-4 py-3 font-semibold">Metode</th>
                       <th className="px-4 py-3 font-semibold">Tanggal Daftar</th>
                       <th className="px-4 py-3 font-semibold text-right">Aksi</th>
@@ -262,6 +297,10 @@ export default async function EventParticipantsPage({ params }: EventParticipant
                         item.payment?.status === 'PENDING' && item.payment?.method === 'CASH'
                       const isPaid = item.payment?.status === 'PAID'
                       const isFailed = item.payment?.status === 'FAILED'
+                      const checkinItem = Array.isArray(item.ticket?.checkins)
+                        ? item.ticket?.checkins[0]
+                        : item.ticket?.checkins
+                      const isCheckedIn = Boolean(checkinItem)
 
                       return (
                         <tr key={item.id} className="hover:bg-muted/30 transition-colors">
@@ -286,6 +325,21 @@ export default async function EventParticipantsPage({ params }: EventParticipant
                             )}
                           </td>
                           <td className="px-4 py-3.5">{getPaymentBadge(item.payment?.status)}</td>
+                          <td className="px-4 py-3.5 text-xs whitespace-nowrap">
+                            {isCheckedIn ? (
+                              <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                                <CheckCircle2 className="h-3 w-3" />
+                                <span>Hadir</span>
+                              </span>
+                            ) : isPaid ? (
+                              <span className="inline-flex items-center gap-1 font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+                                <Clock3 className="h-3 w-3" />
+                                <span>Belum Hadir</span>
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </td>
                           <td className="px-4 py-3.5 text-xs text-muted-foreground">
                             {item.payment?.method || (event.price === 0 ? 'Gratis' : '-')}
                           </td>

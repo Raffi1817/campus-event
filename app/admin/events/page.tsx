@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate, formatTime } from '@/lib/utils'
 import Link from 'next/link'
-import { Calendar, MapPin, Users, Edit3, ExternalLink, Shield } from 'lucide-react'
+import { Calendar, MapPin, Users, Edit3, ExternalLink, Shield, QrCode } from 'lucide-react'
 
 export const instant = false
 
@@ -141,6 +141,16 @@ export default async function AdminEventsPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center justify-end gap-1.5 pt-1">
+                    <Link href={`/panitia/events/${event.id}/checkin`}>
+                      <Button
+                        variant={event.status === 'ONGOING' ? 'default' : 'outline'}
+                        size="sm"
+                        className="gap-1.5 text-xs h-8"
+                      >
+                        <QrCode className="h-3.5 w-3.5" />
+                        <span>Check-in</span>
+                      </Button>
+                    </Link>
                     <Link href={`/panitia/events/${event.id}/participants`}>
                       <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8">
                         <Users className="h-3.5 w-3.5" />
