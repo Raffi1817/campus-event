@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { buttonVariants } from '@/components/ui/button'
-import { Calendar, ArrowRight, ShieldCheck, Ticket, Users } from 'lucide-react'
+import { ArrowRight, ShieldCheck, Ticket, Users } from 'lucide-react'
 import { Footer } from '@/components/shared/layout'
 
 export default function Home() {
@@ -8,9 +8,8 @@ export default function Home() {
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
       <header className="border-b bg-background/95 backdrop-blur">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2 font-bold text-lg text-primary">
-            <Calendar className="h-6 w-6" />
-            <span>CampusEvent</span>
+          <div className="font-bold text-lg text-primary tracking-tight">
+            CampusEvent
           </div>
           <div className="flex items-center gap-3">
             <Link href="/login" className={buttonVariants({ variant: 'ghost' })}>

@@ -105,9 +105,8 @@ export function Navbar({ user }: NavbarProps) {
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-6">
-          <Link href={getHomeLink()} className="flex items-center gap-2 font-bold text-lg text-primary">
-            <Calendar className="h-5 w-5" />
-            <span className="hidden sm:inline">CampusEvent</span>
+          <Link href={getHomeLink()} className="font-bold text-lg text-primary tracking-tight">
+            CampusEvent
           </Link>
           <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getRoleBadgeClass()}`}>
             {user.role}

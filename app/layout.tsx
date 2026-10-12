@@ -13,6 +13,13 @@ import { Toaster } from "@/components/ui/sonner";
 export const metadata: Metadata = {
   title: "CampusEvent - Manajemen Event Kampus",
   description: "Platform terpadu registrasi dan manajemen event kampus.",
+  icons: {
+    icon: [
+      { url: "/icon.png", type: "image/png" },
+      { url: "/favicon.ico" },
+    ],
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({
