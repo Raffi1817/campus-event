@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { loginSchema, registerSchema, LoginInput, RegisterInput } from '@/lib/validators/auth'
-import { redirect } from 'next/navigation'
 
 export type ActionResult<T = unknown> =
   | { ok: true; data: T }
@@ -76,8 +75,8 @@ export async function registerAction(values: RegisterInput): Promise<ActionResul
   return { ok: true, data: { email: data.user.email || parsed.data.email } }
 }
 
-export async function logoutAction() {
+export async function logoutAction(): Promise<ActionResult<null>> {
   const supabase = await createClient()
-  await supabase.auth.signOut()
-  redirect('/login')
+  await supabase.auth.signOut({ scope: 'local' })
+  return { ok: true, data: null }
 }

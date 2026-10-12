@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { loginAction } from '@/lib/actions/auth'
 import { loginSchema } from '@/lib/validators/auth'
@@ -14,7 +14,6 @@ import { toast } from 'sonner'
 import { Suspense } from 'react'
 
 function LoginContent() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const redirectPath = searchParams.get('redirect')
   const errorParam = searchParams.get('error')
@@ -50,16 +49,15 @@ function LoginContent() {
       }
 
       toast.success('Berhasil masuk!')
-      if (redirectPath) {
-        router.push(redirectPath)
-      } else if (result.data.role === 'ADMIN') {
-        router.push('/admin/dashboard')
-      } else if (result.data.role === 'PANITIA') {
-        router.push('/panitia/dashboard')
-      } else {
-        router.push('/dashboard')
-      }
-      router.refresh()
+      const targetUrl =
+        redirectPath ||
+        (result.data.role === 'ADMIN'
+          ? '/admin/dashboard'
+          : result.data.role === 'PANITIA'
+            ? '/panitia/dashboard'
+            : '/dashboard')
+
+      window.location.href = targetUrl
     } catch {
       toast.error('Terjadi kesalahan saat masuk.')
       setLoading(false)

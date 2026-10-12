@@ -1,10 +1,11 @@
 'use client'
 
+import { useTransition } from 'react'
 import { logoutAction } from '@/lib/actions/auth'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LogOut, Calendar, PlusCircle, Layers, Compass, LayoutDashboard, ClipboardList, Ticket } from 'lucide-react'
+import { LogOut, Loader2, Calendar, PlusCircle, Layers, Compass, LayoutDashboard, ClipboardList, Ticket } from 'lucide-react'
 
 interface NavbarProps {
   user: {
@@ -16,6 +17,15 @@ interface NavbarProps {
 
 export function Navbar({ user }: NavbarProps) {
   const pathname = usePathname()
+  const [isLoggingOut, startLogoutTransition] = useTransition()
+
+  const handleLogout = () => {
+    startLogoutTransition(async () => {
+      await logoutAction()
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.href = '/login'
+    })
+  }
 
   const getRoleBadgeClass = () => {
     switch (user.role) {
@@ -133,12 +143,22 @@ export function Navbar({ user }: NavbarProps) {
             <div className="font-medium text-foreground">{user.fullName}</div>
             <div className="text-xs text-muted-foreground">{user.email}</div>
           </div>
-          <form action={logoutAction}>
-            <Button variant="outline" size="sm" type="submit" className="gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="gap-2"
+          >
+            {isLoggingOut ? (
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            ) : (
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Keluar</span>
-            </Button>
-          </form>
+            )}
+            <span className="hidden sm:inline">
+              {isLoggingOut ? 'Keluar...' : 'Keluar'}
+            </span>
+          </Button>
         </div>
       </div>
 
