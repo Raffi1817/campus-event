@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { connection } from 'next/server'
-import { Navbar } from '@/components/navbar'
-import { EventCatalog } from '@/components/event-catalog'
+import { Navbar } from '@/components/shared/layout'
+import { EventCatalog } from '@/components/shared/events'
 
 export const instant = false
 

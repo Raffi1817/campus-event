@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { connection } from 'next/server'
-import { Navbar } from '@/components/navbar'
+import { Navbar } from '@/components/shared/layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Calendar, Users, QrCode, PlusCircle, ArrowRight } from 'lucide-react'

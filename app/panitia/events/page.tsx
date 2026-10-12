@@ -1,11 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { connection } from 'next/server'
-import { Navbar } from '@/components/navbar'
+import { Navbar } from '@/components/shared/layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { formatCurrency, formatDate, formatTime } from '@/lib/utils/format'
+import { formatCurrency, formatDate, formatTime } from '@/lib/utils'
 import Link from 'next/link'
 import { PlusCircle, Calendar, MapPin, Users, Edit3, ExternalLink } from 'lucide-react'
 
@@ -142,7 +142,13 @@ export default async function PanitiaEventsPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end gap-2 pt-1">
+                  <div className="flex flex-wrap items-center justify-end gap-1.5 pt-1">
+                    <Link href={`/panitia/events/${event.id}/participants`}>
+                      <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8">
+                        <Users className="h-3.5 w-3.5" />
+                        <span>Peserta ({event.registered_count ?? 0})</span>
+                      </Button>
+                    </Link>
                     <Link href={`/events/${event.id}`} target="_blank">
                       <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-8">
                         <ExternalLink className="h-3.5 w-3.5" />

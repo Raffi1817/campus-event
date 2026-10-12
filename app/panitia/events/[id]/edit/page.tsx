@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import { connection } from 'next/server'
-import { Navbar } from '@/components/navbar'
-import { EventForm } from '@/components/event-form'
-import { EventStatus } from '@/lib/validators/events'
+import { Navbar } from '@/components/shared/layout'
+import { EventForm } from '@/components/shared/events'
+import { EventStatus } from '@/types'
 
 export const instant = false
 

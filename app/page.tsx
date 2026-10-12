@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { buttonVariants } from '@/components/ui/button'
 import { Calendar, ArrowRight, ShieldCheck, Ticket, Users } from 'lucide-react'
+import { Footer } from '@/components/shared/layout'
 
 export default function Home() {
   return (
@@ -81,9 +82,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t py-6 text-center text-sm text-muted-foreground bg-background">
-        <p>&copy; 2026 CampusEvent. Sistem Manajemen Event Kampus.</p>
-      </footer>
+      <Footer />
     </div>
   )
 }

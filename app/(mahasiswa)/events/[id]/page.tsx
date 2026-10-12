@@ -1,11 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import { connection } from 'next/server'
-import { Navbar } from '@/components/navbar'
-import { Button } from '@/components/ui/button'
+import { Navbar } from '@/components/shared/layout'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { formatCurrency, formatDate, formatTime } from '@/lib/utils/format'
+import { formatCurrency, formatDate, formatTime } from '@/lib/utils'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -17,6 +16,7 @@ import {
   Ticket,
   AlertCircle,
 } from 'lucide-react'
+import { EventRegisterButton } from '@/components/shared/registrations'
 
 export const instant = false
 
@@ -54,9 +54,26 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     notFound()
   }
 
-  const isRegistrationOpen = event.status === 'PUBLISHED'
+  const todayWib = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date())
+  const isPast = Boolean(event.event_date && event.event_date < todayWib)
+  const isRegistrationOpen = event.status === 'PUBLISHED' && !isPast
   const isFull = (event.remaining_quota ?? 0) <= 0
   const isStudent = profile?.role === 'MAHASISWA'
+
+  // Periksa apakah mahasiswa yang login sudah terdaftar pada event ini
+  let isRegistered = false
+  if (user && isStudent) {
+    const { data: existingReg } = await supabase
+      .from('registrations')
+      .select('id')
+      .eq('event_id', id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (existingReg) {
+      isRegistered = true
+    }
+  }
 
   const getStatusBadge = () => {
     switch (event.status) {
@@ -200,10 +217,23 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
                 {/* Tombol Pendaftaran */}
                 <div className="space-y-3">
-                  {!isRegistrationOpen ? (
+                  {isRegistered ? (
+                    <EventRegisterButton
+                      eventId={event.id || id}
+                      eventTitle={event.title || 'Campus Event'}
+                      isFree={event.price === 0}
+                      price={event.price || 0}
+                      isRegistered={true}
+                      remainingQuota={event.remaining_quota ?? 0}
+                    />
+                  ) : !isRegistrationOpen ? (
                     <div className="p-3 rounded-lg bg-muted text-xs text-muted-foreground flex items-center gap-2">
                       <AlertCircle className="h-4 w-4 shrink-0 text-amber-500" />
-                      <span>Pendaftaran tidak dibuka (status event saat ini: {event.status}).</span>
+                      <span>
+                        {isPast
+                          ? 'Pendaftaran ditutup karena event ini sudah lewat.'
+                          : `Pendaftaran tidak dibuka (status event saat ini: ${event.status}).`}
+                      </span>
                     </div>
                   ) : isFull ? (
                     <div className="p-3 rounded-lg bg-destructive/10 text-xs text-destructive flex items-center gap-2">
@@ -216,15 +246,14 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                       <span>Anda login sebagai {profile?.role}. Hanya akun Mahasiswa yang dapat mendaftar.</span>
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      <Button className="w-full gap-2 font-semibold" size="lg" disabled>
-                        <Ticket className="h-4 w-4" />
-                        <span>Daftar Event (Tersedia di Iterasi 4)</span>
-                      </Button>
-                      <p className="text-[11px] text-center text-muted-foreground">
-                        Fitur pendaftaran event akan diaktifkan penuh pada Iterasi 4.
-                      </p>
-                    </div>
+                    <EventRegisterButton
+                      eventId={event.id || id}
+                      eventTitle={event.title || 'Campus Event'}
+                      isFree={event.price === 0}
+                      price={event.price || 0}
+                      isRegistered={false}
+                      remainingQuota={event.remaining_quota ?? 0}
+                    />
                   )}
                 </div>
               </CardContent>
