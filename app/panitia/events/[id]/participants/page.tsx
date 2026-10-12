@@ -5,6 +5,7 @@ import { Navbar } from '@/components/navbar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { formatCurrency, formatDate, formatTime } from '@/lib/utils/format'
+import { ConfirmPaymentDialog } from '@/components/shared/payments'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -252,40 +253,72 @@ export default async function EventParticipantsPage({ params }: EventParticipant
                       <th className="px-4 py-3 font-semibold">Status Bayar</th>
                       <th className="px-4 py-3 font-semibold">Metode</th>
                       <th className="px-4 py-3 font-semibold">Tanggal Daftar</th>
+                      <th className="px-4 py-3 font-semibold text-right">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {participants.map((item, idx) => (
-                      <tr key={item.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3.5 text-xs text-muted-foreground">{idx + 1}</td>
-                        <td className="px-4 py-3.5 font-medium">
-                          <div className="font-semibold text-foreground">
-                            {item.student?.full_name || 'Tidak diketahui'}
-                          </div>
-                          <div className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            <span>{item.student?.email}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3.5 text-xs">
-                          {item.student?.nim ? (
-                            <span className="inline-flex items-center gap-1 font-mono text-muted-foreground">
-                              <GraduationCap className="h-3 w-3 text-primary" />
-                              <span>{item.student.nim}</span>
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3.5">{getPaymentBadge(item.payment?.status)}</td>
-                        <td className="px-4 py-3.5 text-xs text-muted-foreground">
-                          {item.payment?.method || (event.price === 0 ? 'Gratis' : '-')}
-                        </td>
-                        <td className="px-4 py-3.5 text-xs text-muted-foreground whitespace-nowrap">
-                          {formatDate(item.created_at)}
-                        </td>
-                      </tr>
-                    ))}
+                    {participants.map((item, idx) => {
+                      const isPendingCash =
+                        item.payment?.status === 'PENDING' && item.payment?.method === 'CASH'
+                      const isPaid = item.payment?.status === 'PAID'
+                      const isFailed = item.payment?.status === 'FAILED'
+
+                      return (
+                        <tr key={item.id} className="hover:bg-muted/30 transition-colors">
+                          <td className="px-4 py-3.5 text-xs text-muted-foreground">{idx + 1}</td>
+                          <td className="px-4 py-3.5 font-medium">
+                            <div className="font-semibold text-foreground">
+                              {item.student?.full_name || 'Tidak diketahui'}
+                            </div>
+                            <div className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Mail className="h-3 w-3" />
+                              <span>{item.student?.email}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3.5 text-xs">
+                            {item.student?.nim ? (
+                              <span className="inline-flex items-center gap-1 font-mono text-muted-foreground">
+                                <GraduationCap className="h-3 w-3 text-primary" />
+                                <span>{item.student.nim}</span>
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3.5">{getPaymentBadge(item.payment?.status)}</td>
+                          <td className="px-4 py-3.5 text-xs text-muted-foreground">
+                            {item.payment?.method || (event.price === 0 ? 'Gratis' : '-')}
+                          </td>
+                          <td className="px-4 py-3.5 text-xs text-muted-foreground whitespace-nowrap">
+                            {formatDate(item.created_at)}
+                          </td>
+                          <td className="px-4 py-3.5 text-xs text-right whitespace-nowrap">
+                            {isPendingCash ? (
+                              <div className="flex justify-end">
+                                <ConfirmPaymentDialog
+                                  registrationId={item.id}
+                                  studentName={item.student?.full_name || 'Mahasiswa'}
+                                  eventTitle={event.title || 'Event'}
+                                  amount={item.payment?.amount ?? event.price ?? 0}
+                                />
+                              </div>
+                            ) : isPaid ? (
+                              <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                <span>Tiket Terbit</span>
+                              </span>
+                            ) : isFailed ? (
+                              <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 font-semibold">
+                                <XCircle className="h-3.5 w-3.5" />
+                                <span>Ditolak</span>
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>

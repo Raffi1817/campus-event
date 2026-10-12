@@ -31,6 +31,13 @@ export default async function MahasiswaDashboard() {
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id)
 
+  // Ambil jumlah tiket aktif mahasiswa secara riil
+  const { count: activeTicketCount } = await supabase
+    .from('tickets')
+    .select('id, registrations!inner(user_id)', { count: 'exact', head: true })
+    .eq('status', 'ACTIVE')
+    .eq('registrations.user_id', user.id)
+
   // Ambil 3 pendaftaran terakhir
   const { data: rawRecent } = await supabase
     .from('registrations')
@@ -107,18 +114,23 @@ export default async function MahasiswaDashboard() {
             </Card>
           </Link>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Tiket Aktif</CardTitle>
-              <Ticket className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {recentRegistrations.filter((r) => r.payment?.status === 'PAID').length}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Diterbitkan saat lunas (Iterasi 5)</p>
-            </CardContent>
-          </Card>
+          <Link href="/my/tickets" className="block group">
+            <Card className="hover:border-primary/50 transition-all hover:shadow-md cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">
+                  Tiket Aktif
+                </CardTitle>
+                <Ticket className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{activeTicketCount ?? 0}</div>
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  <span>Lihat tiket kegiatan Anda</span>
+                  <ArrowRight className="h-3 w-3 inline" />
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">

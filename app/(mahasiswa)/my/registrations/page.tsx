@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatDate, formatTime } from '@/lib/utils'
 import { CancelRegistrationDialog } from '@/components/shared/registrations'
+import { PaymentDialog } from '@/components/shared/payments'
 import Link from 'next/link'
 import {
   Calendar,
@@ -15,10 +16,10 @@ import {
   Ticket,
   AlertCircle,
   ExternalLink,
-  CreditCard,
   CheckCircle2,
   XCircle,
   Clock3,
+  Banknote,
 } from 'lucide-react'
 
 export const instant = false
@@ -102,7 +103,7 @@ export default async function MyRegistrationsPage() {
 
   const registrations = (rawRegistrations || []) as unknown as RegistrationItem[]
 
-  const getPaymentBadge = (status?: string) => {
+  const getPaymentBadge = (status?: string, method?: string | null) => {
     switch (status) {
       case 'PAID':
         return (
@@ -115,11 +116,19 @@ export default async function MyRegistrationsPage() {
         return (
           <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-300 dark:border-rose-800">
             <XCircle className="h-3 w-3" />
-            <span>Gagal / Ditolak</span>
+            <span>Ditolak / Gagal</span>
           </span>
         )
       case 'PENDING':
       default:
+        if (method === 'CASH') {
+          return (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-300 dark:border-amber-800">
+              <Banknote className="h-3 w-3" />
+              <span>Menunggu Konfirmasi Cash</span>
+            </span>
+          )
+        }
         return (
           <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-300 dark:border-amber-800">
             <Clock3 className="h-3 w-3" />
@@ -196,7 +205,7 @@ export default async function MyRegistrationsPage() {
                         <strong className="text-foreground">{formatDate(reg.created_at)}</strong>
                       </div>
                       <div className="flex items-center gap-2">
-                        {getPaymentBadge(payment?.status)}
+                        {getPaymentBadge(payment?.status, payment?.method)}
                         {event?.category?.name && (
                           <Badge variant="outline" className="text-[11px]">
                             {event.category.name}
@@ -238,7 +247,7 @@ export default async function MyRegistrationsPage() {
                       </div>
 
                       {/* Kolom Biaya & Status Tiket */}
-                      <div className="rounded-xl bg-muted/40 p-3.5 flex flex-col justify-between border space-y-2">
+                      <div className="rounded-xl bg-muted/40 p-3.5 flex flex-col justify-between border space-y-3">
                         <div>
                           <div className="text-[11px] text-muted-foreground uppercase font-medium">
                             Biaya Pendaftaran
@@ -250,14 +259,51 @@ export default async function MyRegistrationsPage() {
 
                         <div className="text-xs">
                           {isPaid ? (
-                            <div className="text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1">
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                              <span>Tiket Telah Terbit</span>
+                            <div className="space-y-1.5">
+                              <div className="text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
+                                <CheckCircle2 className="h-4 w-4" />
+                                <span>Tiket Telah Terbit</span>
+                              </div>
+                              <Link href="/my/tickets" className="block">
+                                <Button
+                                  size="sm"
+                                  className="w-full text-xs h-7 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-xs"
+                                >
+                                  <Ticket className="h-3.5 w-3.5" />
+                                  <span>Lihat Tiket</span>
+                                </Button>
+                              </Link>
+                            </div>
+                          ) : payment?.status === 'FAILED' ? (
+                            <div className="space-y-1.5">
+                              <div className="text-rose-700 dark:text-rose-400 font-medium flex items-center gap-1 text-[11px]">
+                                <XCircle className="h-3.5 w-3.5" />
+                                <span>Pembayaran Ditolak</span>
+                              </div>
+                              <PaymentDialog
+                                registrationId={reg.id}
+                                eventTitle={event?.title || 'Event'}
+                                amount={payment?.amount ?? event?.price ?? 0}
+                                isRetry={true}
+                              />
+                            </div>
+                          ) : payment?.method === 'CASH' ? (
+                            <div className="space-y-1">
+                              <div className="text-amber-700 dark:text-amber-400 font-medium flex items-center gap-1 text-[11px]">
+                                <Banknote className="h-3.5 w-3.5" />
+                                <span>Tunai di Lokasi</span>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground leading-tight">
+                                Menunggu konfirmasi panitia di meja registrasi.
+                              </p>
                             </div>
                           ) : (
-                            <div className="text-amber-700 dark:text-amber-400 font-medium flex items-center gap-1">
-                              <CreditCard className="h-3.5 w-3.5" />
-                              <span>Simulasi bayar aktif di Iterasi 5</span>
+                            <div className="space-y-1">
+                              <PaymentDialog
+                                registrationId={reg.id}
+                                eventTitle={event?.title || 'Event'}
+                                amount={payment?.amount ?? event?.price ?? 0}
+                              />
                             </div>
                           )}
                         </div>
@@ -281,6 +327,14 @@ export default async function MyRegistrationsPage() {
                             registrationId={reg.id}
                             eventTitle={event?.title || 'Event'}
                           />
+                        )}
+                        {isPaid && (
+                          <Link href="/my/tickets">
+                            <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5">
+                              <Ticket className="h-3.5 w-3.5 text-primary" />
+                              <span>Buka Tiket</span>
+                            </Button>
+                          </Link>
                         )}
                         <Link href={`/events/${event?.id}`}>
                           <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">

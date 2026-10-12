@@ -11,7 +11,7 @@ const poppins = Poppins({
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
-  title: "CampusEvent - Manajemen Event Kampus",
+  title: "CampusEvent | Manajemen Event Kampus",
   description: "Platform terpadu registrasi dan manajemen event kampus.",
   icons: {
     icon: [

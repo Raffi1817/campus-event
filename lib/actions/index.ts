@@ -8,3 +8,4 @@ export {
   deleteDraftEventAction,
 } from './events'
 export { registerEventAction, cancelRegistrationAction } from './registrations'
+export { payRegistrationAction, confirmPaymentAction } from './payments'

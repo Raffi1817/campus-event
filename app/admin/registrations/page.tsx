@@ -5,6 +5,7 @@ import { Navbar } from '@/components/shared/layout'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { ConfirmPaymentDialog } from '@/components/shared/payments'
 import Link from 'next/link'
 import {
   Users,
@@ -303,8 +304,17 @@ export default async function AdminRegistrationsPage() {
                         <td className="px-4 py-3.5 text-xs text-muted-foreground whitespace-nowrap">
                           {formatDate(item.created_at)}
                         </td>
-                        <td className="px-4 py-3.5 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
+                        <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-2">
+                            {item.payment?.status === 'PENDING' &&
+                              item.payment?.method === 'CASH' && (
+                                <ConfirmPaymentDialog
+                                  registrationId={item.id}
+                                  studentName={item.student?.full_name || 'Mahasiswa'}
+                                  eventTitle={item.event?.title || 'Event'}
+                                  amount={item.payment?.amount ?? item.event?.price ?? 0}
+                                />
+                              )}
                             {item.event && (
                               <Link href={`/panitia/events/${item.event.id}/participants`}>
                                 <button
