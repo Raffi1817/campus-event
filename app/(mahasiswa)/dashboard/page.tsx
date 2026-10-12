@@ -38,6 +38,21 @@ export default async function MahasiswaDashboard() {
     .eq('status', 'ACTIVE')
     .eq('registrations.user_id', user.id)
 
+  // Ambil jumlah notifikasi belum dibaca secara riil (Iterasi 7)
+  const { count: unreadNotificationCount } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('is_read', false)
+
+  // Ambil 3 notifikasi terbaru
+  const { data: rawRecentNotifications } = await supabase
+    .from('notifications')
+    .select('id, title, message, type, is_read, created_at')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(3)
+
   // Ambil 3 pendaftaran terakhir
   const { data: rawRecent } = await supabase
     .from('registrations')
@@ -77,6 +92,7 @@ export default async function MahasiswaDashboard() {
   }
 
   const recentRegistrations = (rawRecent || []) as unknown as RecentItem[]
+  const recentNotifications = rawRecentNotifications || []
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -91,13 +107,13 @@ export default async function MahasiswaDashboard() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard Mahasiswa</h1>
           <p className="text-muted-foreground mt-1">
-            Selamat datang kembali, {profile?.full_name}. Pantau pendaftaran dan tiket event Anda di sini.
+            Selamat datang kembali, {profile?.full_name}. Pantau pendaftaran, tiket event, dan notifikasi Anda di sini.
           </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
           <Link href="/my/registrations" className="block group">
-            <Card className="hover:border-primary/50 transition-all hover:shadow-md cursor-pointer">
+            <Card className="hover:border-primary/50 transition-all hover:shadow-md cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">
                   Event Diikuti
@@ -115,7 +131,7 @@ export default async function MahasiswaDashboard() {
           </Link>
 
           <Link href="/my/tickets" className="block group">
-            <Card className="hover:border-primary/50 transition-all hover:shadow-md cursor-pointer">
+            <Card className="hover:border-primary/50 transition-all hover:shadow-md cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">
                   Tiket Aktif
@@ -132,17 +148,69 @@ export default async function MahasiswaDashboard() {
             </Card>
           </Link>
 
+          <Link href="/notifications" className="block group">
+            <Card className="hover:border-primary/50 transition-all hover:shadow-md cursor-pointer h-full">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">
+                  Notifikasi
+                </CardTitle>
+                <Bell className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{unreadNotificationCount ?? 0}</div>
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  <span>Pemberitahuan belum dibaca</span>
+                  <ArrowRight className="h-3 w-3 inline" />
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+
+        {/* Notifikasi Terbaru jika ada */}
+        {recentNotifications.length > 0 && (
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Notifikasi</CardTitle>
-              <Bell className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <div>
+                <CardTitle className="text-lg">Notifikasi Terbaru</CardTitle>
+                <CardDescription>Pemberitahuan terkini mengenai event dan transaksi Anda</CardDescription>
+              </div>
+              <Link href="/notifications">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-xs">
+                  <span>Lihat Semua</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground mt-1">Pemberitahuan belum dibaca (Iterasi 7)</p>
+            <CardContent className="space-y-3">
+              {recentNotifications.map((notif) => (
+                <div
+                  key={notif.id}
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border ${
+                    !notif.is_read
+                      ? 'border-primary/30 bg-primary/5'
+                      : 'bg-muted/20'
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm">{notif.title}</span>
+                      {!notif.is_read && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+                          Baru
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{notif.message}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0">
+                    {formatDate(notif.created_at)}
+                  </span>
+                </div>
+              ))}
             </CardContent>
           </Card>
-        </div>
+        )}
 
         {/* Riwayat Pendaftaran Terbaru jika ada */}
         {recentRegistrations.length > 0 && (
@@ -238,4 +306,3 @@ export default async function MahasiswaDashboard() {
     </div>
   )
 }
-

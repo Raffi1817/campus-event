@@ -99,7 +99,7 @@ npx tsx scripts/seed.ts          # seed data sintetis (butuh .env.local)
 
 ## Status saat ini
 - [x] Iterasi 1  - [x] Iterasi 2  - [x] Iterasi 3  - [x] Seed  - [x] Iterasi 4
-- [x] Iterasi 5  - [x] Iterasi 6  - [ ] Iterasi 7  - [ ] Iterasi 8
+- [x] Iterasi 5  - [x] Iterasi 6  - [x] Iterasi 7  - [ ] Iterasi 8
 (Perbarui centang ini setiap iterasi selesai.)
 
 

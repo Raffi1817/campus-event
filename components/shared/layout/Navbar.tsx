@@ -5,7 +5,7 @@ import { logoutAction } from '@/lib/actions/auth'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LogOut, Loader2, Calendar, PlusCircle, Layers, Compass, LayoutDashboard, ClipboardList, Ticket } from 'lucide-react'
+import { LogOut, Loader2, Calendar, PlusCircle, Layers, Compass, LayoutDashboard, ClipboardList, Ticket, Bell, BarChart3 } from 'lucide-react'
 
 interface NavbarProps {
   user: {
@@ -70,6 +70,12 @@ export function Navbar({ user }: NavbarProps) {
       show: user.role === 'MAHASISWA',
     },
     {
+      label: 'Notifikasi',
+      href: '/notifications',
+      icon: Bell,
+      show: user.role === 'MAHASISWA',
+    },
+    {
       label: 'Event Saya',
       href: '/panitia/events',
       icon: Calendar,
@@ -79,6 +85,12 @@ export function Navbar({ user }: NavbarProps) {
       label: 'Buat Event',
       href: '/panitia/events/new',
       icon: PlusCircle,
+      show: user.role === 'PANITIA',
+    },
+    {
+      label: 'Laporan',
+      href: '/panitia/reports',
+      icon: BarChart3,
       show: user.role === 'PANITIA',
     },
     {
@@ -97,6 +109,12 @@ export function Navbar({ user }: NavbarProps) {
       label: 'Kelola Kategori',
       href: '/admin/categories',
       icon: Layers,
+      show: user.role === 'ADMIN',
+    },
+    {
+      label: 'Laporan',
+      href: '/admin/reports',
+      icon: BarChart3,
       show: user.role === 'ADMIN',
     },
   ]

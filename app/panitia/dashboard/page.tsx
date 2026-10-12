@@ -4,7 +4,8 @@ import { connection } from 'next/server'
 import { Navbar } from '@/components/shared/layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Calendar, Users, QrCode, PlusCircle, ArrowRight } from 'lucide-react'
+import { formatCurrency } from '@/lib/utils'
+import { Calendar, Users, QrCode, PlusCircle, ArrowRight, DollarSign, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
 
 export const instant = false
@@ -28,11 +29,47 @@ export default async function PanitiaDashboard() {
     redirect('/dashboard')
   }
 
-  // Hitung jumlah event yang dikelola panitia ini
-  const { count: totalMyEvents } = await supabase
+  // Ambil seluruh event yang dikelola panitia ini
+  const { data: myEvents } = await supabase
     .from('events')
-    .select('*', { count: 'exact', head: true })
+    .select('id, title, status, quota, price, event_date')
     .eq('organizer_id', user.id)
+
+  const myEventIds = (myEvents || []).map((e) => e.id)
+  const totalMyEvents = myEvents?.length ?? 0
+
+  let totalRegistrations = 0
+  let totalCheckIns = 0
+  let totalRevenue = 0
+
+  if (myEventIds.length > 0) {
+    // 1. Hitung total pendaftar
+    const { count: regCount } = await supabase
+      .from('registrations')
+      .select('*', { count: 'exact', head: true })
+      .in('event_id', myEventIds)
+    totalRegistrations = regCount ?? 0
+
+    // 2. Hitung total check-in
+    const { count: checkinCount } = await supabase
+      .from('checkins')
+      .select('id, ticket:tickets!inner(registration:registrations!inner(event_id))', { count: 'exact', head: true })
+      .in('ticket.registration.event_id', myEventIds)
+    totalCheckIns = checkinCount ?? 0
+
+    // 3. Hitung total pendapatan dari pembayaran PAID
+    const { data: paidPayments } = await supabase
+      .from('payments')
+      .select('amount, registration:registrations!inner(event_id)')
+      .eq('status', 'PAID')
+      .in('registration.event_id', myEventIds)
+
+    totalRevenue = (paidPayments || []).reduce((acc, p) => acc + (p.amount || 0), 0)
+  }
+
+  const attendanceRate = totalRegistrations > 0
+    ? Math.round((totalCheckIns / totalRegistrations) * 100)
+    : 0
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -48,26 +85,35 @@ export default async function PanitiaDashboard() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Dashboard Panitia</h1>
             <p className="text-muted-foreground mt-1">
-              Selamat datang, {profile?.full_name}. Kelola event kampus, peserta, dan check-in di sini.
+              Selamat datang, {profile?.full_name}. Pantau statistik kegiatan, peserta, dan check-in di sini.
             </p>
           </div>
-          <Link href="/panitia/events/new">
-            <Button className="gap-2">
-              <PlusCircle className="h-4 w-4" />
-              <span>Buat Event Baru</span>
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/panitia/reports">
+              <Button variant="outline" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                <span>Laporan Event</span>
+              </Button>
+            </Link>
+            <Link href="/panitia/events/new">
+              <Button className="gap-2">
+                <PlusCircle className="h-4 w-4" />
+                <span>Buat Event Baru</span>
+              </Button>
+            </Link>
+          </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+        {/* Kartu Metrik Panitia */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Event Dikelola</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalMyEvents ?? 0}</div>
-              <p className="text-xs text-muted-foreground mt-1">Event milik Anda</p>
+              <div className="text-2xl font-bold">{totalMyEvents}</div>
+              <p className="text-xs text-muted-foreground mt-1">Event aktif & arsip</p>
             </CardContent>
           </Card>
 
@@ -77,25 +123,38 @@ export default async function PanitiaDashboard() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground mt-1">Peserta terdaftar (Iterasi 4)</p>
+              <div className="text-2xl font-bold">{totalRegistrations}</div>
+              <p className="text-xs text-muted-foreground mt-1">Seluruh event milik Anda</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Check-in Hadir</CardTitle>
+              <CardTitle className="text-sm font-medium">Kehadiran Check-in</CardTitle>
               <QrCode className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground mt-1">Peserta yang telah check-in (Iterasi 6)</p>
+              <div className="text-2xl font-bold">{totalCheckIns}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Tingkat kehadiran: <span className="font-semibold text-primary">{attendanceRate}%</span>
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Total Pemasukan</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">{formatCurrency(totalRevenue)}</div>
+              <p className="text-xs text-muted-foreground mt-1">Pembayaran status PAID</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Akses Cepat */}
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-3">
           <Card className="hover:border-primary/50 transition-colors">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -103,13 +162,33 @@ export default async function PanitiaDashboard() {
                 <span>Kelola Event Saya</span>
               </CardTitle>
               <CardDescription>
-                Pantau daftar event, ubah informasi pelaksanaan, dan ubah status siklus hidup event.
+                Pantau daftar event, ubah rincian pelaksanaan, dan atur transisi status event.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Link href="/panitia/events">
-                <Button variant="outline" className="gap-2 w-full sm:w-auto">
-                  <span>Lihat Event Saya</span>
+                <Button variant="outline" className="gap-2 w-full">
+                  <span>Buka Daftar Event</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:border-primary/50 transition-colors">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                <span>Laporan & Statistik</span>
+              </CardTitle>
+              <CardDescription>
+                Lihat rekapitulasi kuota terisi, rasio kehadiran, dan rincian omset tiket per event.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/panitia/reports">
+                <Button variant="outline" className="gap-2 w-full">
+                  <span>Lihat Laporan Lengkap</span>
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
@@ -120,7 +199,7 @@ export default async function PanitiaDashboard() {
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <PlusCircle className="h-5 w-5 text-primary" />
-                <span>Publikasikan Kegiatan Baru</span>
+                <span>Publikasikan Event</span>
               </CardTitle>
               <CardDescription>
                 Buka pendaftaran kegiatan baru untuk mahasiswa kampus dengan mengisi form event.
@@ -128,7 +207,7 @@ export default async function PanitiaDashboard() {
             </CardHeader>
             <CardContent>
               <Link href="/panitia/events/new">
-                <Button className="gap-2 w-full sm:w-auto">
+                <Button className="gap-2 w-full">
                   <span>Mulai Buat Event</span>
                   <ArrowRight className="h-4 w-4" />
                 </Button>
