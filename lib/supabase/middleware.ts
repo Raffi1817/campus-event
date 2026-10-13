@@ -89,13 +89,6 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Jika mengakses root '/' alihkan sesuai login
-  if (pathname === '/') {
-    const url = request.nextUrl.clone()
-    url.pathname = getDefaultDashboard()
-    return NextResponse.redirect(url)
-  }
-
   // Proteksi rute Admin: hanya role ADMIN
   if (pathname.startsWith('/admin') && role !== 'ADMIN') {
     const url = request.nextUrl.clone()

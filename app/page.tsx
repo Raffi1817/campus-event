@@ -1,9 +1,36 @@
 import Link from 'next/link'
 import { buttonVariants } from '@/components/ui/button'
 import { ArrowRight, ShieldCheck, Ticket, Users } from 'lucide-react'
-import { Footer } from '@/components/shared/layout'
+import { Footer, HomeUserMenu } from '@/components/shared/layout'
+import { createClient } from '@/lib/supabase/server'
+import { connection } from 'next/server'
 
-export default function Home() {
+export const instant = false
+
+export default async function Home() {
+  await connection()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  let dashboardUrl = '/dashboard'
+  let profileName: string | null = null
+  let role = 'MAHASISWA'
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, role')
+      .eq('id', user.id)
+      .single()
+
+    profileName = profile?.full_name || null
+    role = profile?.role || 'MAHASISWA'
+
+    if (role === 'ADMIN') dashboardUrl = '/admin/dashboard'
+    else if (role === 'PANITIA') dashboardUrl = '/panitia/dashboard'
+    else dashboardUrl = '/dashboard'
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
       <header className="border-b bg-background/95 backdrop-blur">
@@ -11,14 +38,25 @@ export default function Home() {
           <div className="font-bold text-lg text-primary tracking-tight">
             CampusEvent
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/login" className={buttonVariants({ variant: 'ghost' })}>
-              Masuk
-            </Link>
-            <Link href="/register" className={buttonVariants()}>
-              Daftar
-            </Link>
-          </div>
+          {user ? (
+            <HomeUserMenu
+              user={{
+                fullName: profileName || user.email || 'Pengguna',
+                email: user.email || '',
+                role,
+                dashboardUrl,
+              }}
+            />
+          ) : (
+            <div className="flex items-center gap-3">
+              <Link href="/login" className={buttonVariants({ variant: 'ghost' })}>
+                Masuk
+              </Link>
+              <Link href="/register" className={buttonVariants()}>
+                Daftar
+              </Link>
+            </div>
+          )}
         </div>
       </header>
 
@@ -37,12 +75,20 @@ export default function Home() {
             Daftar seminar, workshop, kompetisi, dan dapatkan tiket digital secara instan.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Link href="/register" className={buttonVariants({ size: 'lg', className: 'gap-2 text-base' })}>
-              Mulai Sekarang <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link href="/login" className={buttonVariants({ variant: 'outline', size: 'lg', className: 'text-base' })}>
-              Masuk ke Akun
-            </Link>
+            {user ? (
+              <Link href="/events" className={buttonVariants({ size: 'lg', className: 'gap-2 text-base' })}>
+                Jelajah Event <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <>
+                <Link href="/register" className={buttonVariants({ size: 'lg', className: 'gap-2 text-base' })}>
+                  Mulai Sekarang <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link href="/login" className={buttonVariants({ variant: 'outline', size: 'lg', className: 'text-base' })}>
+                  Masuk ke Akun
+                </Link>
+              </>
+            )}
           </div>
         </section>
 

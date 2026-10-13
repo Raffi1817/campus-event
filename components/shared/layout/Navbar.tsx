@@ -1,11 +1,24 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useRef, useEffect, useTransition } from 'react'
 import { logoutAction } from '@/lib/actions/auth'
-import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LogOut, Loader2, Calendar, PlusCircle, Layers, Compass, LayoutDashboard, ClipboardList, Ticket, Bell, BarChart3 } from 'lucide-react'
+import {
+  LogOut,
+  Loader2,
+  Calendar,
+  PlusCircle,
+  Layers,
+  Compass,
+  LayoutDashboard,
+  ClipboardList,
+  Ticket,
+  Bell,
+  BarChart3,
+  Home,
+  ChevronDown,
+} from 'lucide-react'
 
 interface NavbarProps {
   user: {
@@ -18,6 +31,32 @@ interface NavbarProps {
 export function Navbar({ user }: NavbarProps) {
   const pathname = usePathname()
   const [isLoggingOut, startLogoutTransition] = useTransition()
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('keydown', handleKeyDown)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isDropdownOpen])
 
   const handleLogout = () => {
     startLogoutTransition(async () => {
@@ -42,6 +81,13 @@ export function Navbar({ user }: NavbarProps) {
     if (user.role === 'ADMIN') return '/admin/dashboard'
     if (user.role === 'PANITIA') return '/panitia/dashboard'
     return '/dashboard'
+  }
+
+  const getInitials = (name: string) => {
+    if (!name) return 'U'
+    const parts = name.trim().split(/\s+/)
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
   }
 
   const navLinks = [
@@ -155,32 +201,90 @@ export function Navbar({ user }: NavbarProps) {
           </nav>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="hidden text-right text-sm lg:block">
-            <div className="font-medium text-foreground">{user.fullName}</div>
-            <div className="text-xs text-muted-foreground">{user.email}</div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            className="gap-2"
-          >
-            {isLoggingOut ? (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            ) : (
-              <LogOut className="h-4 w-4" />
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* User Profile Submenu / Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsDropdownOpen((prev) => !prev)}
+              className="flex items-center gap-2 rounded-lg p-1.5 transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring text-left cursor-pointer"
+              aria-expanded={isDropdownOpen}
+              aria-haspopup="true"
+              aria-label="Menu Akun"
+            >
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-xs border border-primary/20">
+                {getInitials(user.fullName)}
+              </div>
+              <span className="hidden font-medium text-sm text-foreground leading-tight truncate max-w-[140px] lg:inline">
+                {user.fullName}
+              </span>
+              <ChevronDown
+                className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+                  isDropdownOpen ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+
+            {isDropdownOpen && (
+              <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border bg-card p-1.5 text-card-foreground shadow-lg ring-1 ring-black/5 z-50 animate-in fade-in-50 zoom-in-95">
+                <div className="px-3 py-2 border-b mb-1">
+                  <p className="text-sm font-semibold text-foreground truncate">{user.fullName}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  <div className="mt-1.5">
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${getRoleBadgeClass()}`}>
+                      {user.role}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-0.5">
+                  <Link
+                    href="/"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted font-medium transition-colors"
+                  >
+                    <Home className="h-4 w-4 text-primary" />
+                    <span>Halaman Beranda</span>
+                  </Link>
+                </div>
+
+                <div className="my-1 border-t" />
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDropdownOpen(false)
+                    handleLogout()
+                  }}
+                  disabled={isLoggingOut}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-destructive hover:bg-destructive/10 font-medium transition-colors disabled:opacity-50 text-left cursor-pointer"
+                >
+                  {isLoggingOut ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-destructive" />
+                  ) : (
+                    <LogOut className="h-4 w-4 text-destructive" />
+                  )}
+                  <span>{isLoggingOut ? 'Keluar...' : 'Keluar'}</span>
+                </button>
+              </div>
             )}
-            <span className="hidden sm:inline">
-              {isLoggingOut ? 'Keluar...' : 'Keluar'}
-            </span>
-          </Button>
+          </div>
         </div>
       </div>
 
       {/* Mobile Navigation Bar */}
       <div className="md:hidden border-t px-2 py-1.5 bg-muted/30 flex items-center gap-1 overflow-x-auto">
+        <Link
+          href="/"
+          className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs whitespace-nowrap transition-colors ${
+            pathname === '/'
+              ? 'bg-primary text-primary-foreground font-medium'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Home className="h-3.5 w-3.5" />
+          <span>Beranda</span>
+        </Link>
         {navLinks
           .filter((l) => l.show)
           .map((link) => {
