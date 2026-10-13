@@ -118,9 +118,9 @@ export default async function Home() {
               <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300">
                 <ShieldCheck className="h-5 w-5" />
               </div>
-              <h3 className="font-semibold text-lg">Akses Berjenjang (RBAC)</h3>
+              <h3 className="font-semibold text-lg">Keamanan Terintegrasi</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Didukung Row-Level Security (RLS) PostgreSQL untuk memisahkan wewenang Mahasiswa, Panitia, dan Admin.
+                Sistem perlindungan data dan pemisahan hak akses yang aman untuk Mahasiswa, Panitia, dan Admin.
               </p>
             </div>
           </div>

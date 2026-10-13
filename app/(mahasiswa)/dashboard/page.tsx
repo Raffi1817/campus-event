@@ -4,11 +4,54 @@ import { connection } from 'next/server'
 import { Navbar } from '@/components/shared/layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Ticket, Bell, Compass, ArrowRight, ClipboardList, CheckCircle2, Clock3 } from 'lucide-react'
+import {
+  Ticket,
+  Bell,
+  Compass,
+  ArrowRight,
+  ClipboardList,
+  CheckCircle2,
+  Clock3,
+  Calendar,
+  Sparkles,
+  Users,
+} from 'lucide-react'
 import Link from 'next/link'
 
 export const instant = false
+
+// Helper untuk menghitung mundur hari pelaksanaan event
+function getEventCountdown(eventDateStr: string | null) {
+  if (!eventDateStr) return null
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const [year, month, day] = eventDateStr.split('-').map(Number)
+  if (!year || !month || !day) return null
+
+  const eventDate = new Date(year, month - 1, day)
+  eventDate.setHours(0, 0, 0, 0)
+
+  const diffMs = eventDate.getTime() - today.getTime()
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffDays < 0) {
+    return { text: 'Selesai', variant: 'muted' as const }
+  }
+  if (diffDays === 0) {
+    return { text: 'Hari ini', variant: 'destructive' as const }
+  }
+  if (diffDays === 1) {
+    return { text: 'Besok', variant: 'warning' as const }
+  }
+  if (diffDays <= 7) {
+    return { text: `${diffDays} hari lagi`, variant: 'info' as const }
+  }
+  return { text: `${diffDays} hari lagi`, variant: 'outline' as const }
+}
 
 export default async function MahasiswaDashboard() {
   await connection()
@@ -25,27 +68,48 @@ export default async function MahasiswaDashboard() {
     .eq('id', user.id)
     .single()
 
-  // Ambil jumlah pendaftaran mahasiswa secara riil
-  const { count: registeredCount } = await supabase
+  const todayStr = new Date().toISOString().split('T')[0]
+
+  // 1. Ambil seluruh data pendaftaran mahasiswa untuk perhitungan metrik
+  const { data: allUserRegs } = await supabase
     .from('registrations')
-    .select('*', { count: 'exact', head: true })
+    .select(`
+      id,
+      event_id,
+      event:events (
+        id,
+        event_date
+      )
+    `)
     .eq('user_id', user.id)
 
-  // Ambil jumlah tiket aktif mahasiswa secara riil
+  const registeredCount = allUserRegs?.length ?? 0
+  const upcomingRegisteredCount = (allUserRegs || []).filter(
+    (r) => {
+      const ev = Array.isArray(r.event) ? r.event[0] : r.event
+      return ev?.event_date && ev.event_date >= todayStr
+    }
+  ).length
+
+  const registeredEventIdSet = new Set(
+    (allUserRegs || []).map((r) => r.event_id)
+  )
+
+  // 2. Ambil jumlah tiket aktif mahasiswa secara riil
   const { count: activeTicketCount } = await supabase
     .from('tickets')
     .select('id, registrations!inner(user_id)', { count: 'exact', head: true })
     .eq('status', 'ACTIVE')
     .eq('registrations.user_id', user.id)
 
-  // Ambil jumlah notifikasi belum dibaca secara riil (Iterasi 7)
+  // 3. Ambil jumlah notifikasi belum dibaca secara riil
   const { count: unreadNotificationCount } = await supabase
     .from('notifications')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id)
     .eq('is_read', false)
 
-  // Ambil 3 notifikasi terbaru
+  // 4. Ambil 3 notifikasi terbaru
   const { data: rawRecentNotifications } = await supabase
     .from('notifications')
     .select('id, title, message, type, is_read, created_at')
@@ -53,8 +117,8 @@ export default async function MahasiswaDashboard() {
     .order('created_at', { ascending: false })
     .limit(3)
 
-  // Ambil 3 pendaftaran terakhir
-  const { data: rawRecent } = await supabase
+  // 5. Ambil 3 pendaftaran terakhir mahasiswa
+  const { data: rawRecentRegistrations } = await supabase
     .from('registrations')
     .select(`
       id,
@@ -75,6 +139,15 @@ export default async function MahasiswaDashboard() {
     .order('created_at', { ascending: false })
     .limit(3)
 
+  // 6. Ambil 3 rekomendasi event yang segera berlangsung (status PUBLISHED dan tanggal >= hari ini)
+  const { data: rawRecommendedEvents } = await supabase
+    .from('events_with_stats')
+    .select('id, title, event_date, start_time, location, price, remaining_quota, category_name')
+    .eq('status', 'PUBLISHED')
+    .gte('event_date', todayStr)
+    .order('event_date', { ascending: true })
+    .limit(3)
+
   interface RecentItem {
     id: string
     created_at: string
@@ -91,8 +164,12 @@ export default async function MahasiswaDashboard() {
     } | null
   }
 
-  const recentRegistrations = (rawRecent || []) as unknown as RecentItem[]
+  const recentRegistrations = (rawRecentRegistrations || []) as unknown as RecentItem[]
   const recentNotifications = rawRecentNotifications || []
+  const recommendedEvents = rawRecommendedEvents || []
+
+  // Sapaan nama depan
+  const firstName = profile?.full_name?.split(' ')[0] || 'Mahasiswa'
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -104,204 +181,404 @@ export default async function MahasiswaDashboard() {
         }}
       />
       <main className="container mx-auto p-4 md:p-6 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard Mahasiswa</h1>
-          <p className="text-muted-foreground mt-1">
-            Selamat datang kembali, {profile?.full_name}. Pantau pendaftaran, tiket event, dan notifikasi Anda di sini.
-          </p>
-        </div>
+        {/* Header: Sapaan Personal + Info Akun Ringkas + CTA Utama */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+              Halo, {firstName}! 👋
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Selamat datang di portal kegiatan kampus. Pantau pendaftaran dan agenda Anda di sini.
+            </p>
+          </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-          <Link href="/my/registrations" className="block group">
-            <Card className="hover:border-primary/50 transition-all hover:shadow-md cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">
-                  Event Diikuti
-                </CardTitle>
-                <ClipboardList className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{registeredCount ?? 0}</div>
-                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                  <span>Lihat riwayat pendaftaran</span>
-                  <ArrowRight className="h-3 w-3 inline" />
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/my/tickets" className="block group">
-            <Card className="hover:border-primary/50 transition-all hover:shadow-md cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">
-                  Tiket Aktif
-                </CardTitle>
-                <Ticket className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{activeTicketCount ?? 0}</div>
-                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                  <span>Lihat tiket kegiatan Anda</span>
-                  <ArrowRight className="h-3 w-3 inline" />
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/notifications" className="block group">
-            <Card className="hover:border-primary/50 transition-all hover:shadow-md cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">
-                  Notifikasi
-                </CardTitle>
-                <Bell className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{unreadNotificationCount ?? 0}</div>
-                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                  <span>Pemberitahuan belum dibaca</span>
-                  <ArrowRight className="h-3 w-3 inline" />
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-
-        {/* Notifikasi Terbaru jika ada */}
-        {recentNotifications.length > 0 && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <div>
-                <CardTitle className="text-lg">Notifikasi Terbaru</CardTitle>
-                <CardDescription>Pemberitahuan terkini mengenai event dan transaksi Anda</CardDescription>
-              </div>
-              <Link href="/notifications">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-xs">
-                  <span>Lihat Semua</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Button>
-              </Link>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {recentNotifications.map((notif) => (
-                <div
-                  key={notif.id}
-                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border ${
-                    !notif.is_read
-                      ? 'border-primary/30 bg-primary/5'
-                      : 'bg-muted/20'
-                  }`}
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm">{notif.title}</span>
-                      {!notif.is_read && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
-                          Baru
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">{notif.message}</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    {formatDate(notif.created_at)}
-                  </span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Riwayat Pendaftaran Terbaru jika ada */}
-        {recentRegistrations.length > 0 && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <div>
-                <CardTitle className="text-lg">Pendaftaran Terbaru</CardTitle>
-                <CardDescription>Kegiatan kampus yang baru saja Anda daftarkan</CardDescription>
-              </div>
-              <Link href="/my/registrations">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-xs">
-                  <span>Lihat Semua</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Button>
-              </Link>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {recentRegistrations.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border bg-muted/20"
-                >
-                  <div className="space-y-1">
-                    <Link
-                      href={`/events/${item.event?.id}`}
-                      className="font-semibold text-sm hover:text-primary hover:underline transition-colors"
-                    >
-                      {item.event?.title}
-                    </Link>
-                    <div className="text-xs text-muted-foreground flex items-center gap-3">
-                      <span>{formatDate(item.event?.event_date || '')}</span>
-                      <span>•</span>
-                      <span>{item.event?.location}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 self-start sm:self-auto">
-                    {item.payment?.status === 'PAID' ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400">
-                        <CheckCircle2 className="h-3 w-3" />
-                        <span>PAID</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-400">
-                        <Clock3 className="h-3 w-3" />
-                        <span>PENDING</span>
-                      </span>
-                    )}
-                    <span className="text-xs font-bold text-primary">
-                      {item.event?.price === 0 ? 'Gratis' : formatCurrency(item.payment?.amount ?? item.event?.price ?? 0)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Akses Cepat Jelajah Event (Iterasi 3) */}
-        <Card className="border-primary/30 bg-primary/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Compass className="h-5 w-5 text-primary" />
+          <Link href="/events" className="shrink-0">
+            <Button className="gap-2 shadow-sm w-full sm:w-auto">
+              <Compass className="h-4 w-4" />
               <span>Jelajah Event Kampus</span>
-            </CardTitle>
-            <CardDescription>
-              Temukan kegiatan seminar, lomba, pelatihan, dan workshop menarik yang sedang dibuka di kampus.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/events">
-              <Button className="gap-2">
-                <span>Buka Katalog Event</span>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+            </Button>
+          </Link>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Profil Mahasiswa</CardTitle>
-            <CardDescription>Informasi akun mahasiswa terdaftar</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div><span className="font-semibold">Nama:</span> {profile?.full_name}</div>
-            <div><span className="font-semibold">NIM:</span> {profile?.nim || '-'}</div>
-            <div><span className="font-semibold">Email:</span> {profile?.email}</div>
-            <div><span className="font-semibold">Role:</span> {profile?.role}</div>
-            <div><span className="font-semibold">Status:</span> {profile?.is_active ? 'Aktif' : 'Nonaktif'}</div>
-          </CardContent>
-        </Card>
+        {/* 3 Kartu Statistik Ramping (Compact & Clickable) */}
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+          {/* Stat 1: Event Diikuti */}
+          <Link href="/my/registrations" className="block group">
+            <Card className="hover:border-primary/50 transition-all hover:shadow-sm cursor-pointer p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                  Event Diikuti
+                </span>
+                <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+                  <ClipboardList className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="mt-2 flex items-baseline justify-between">
+                <div className="text-2xl font-bold tracking-tight">{registeredCount}</div>
+                <span className="text-xs text-muted-foreground flex items-center gap-0.5 group-hover:text-primary transition-colors">
+                  <span>Riwayat</span>
+                  <ArrowRight className="h-3 w-3" />
+                </span>
+              </div>
+            </Card>
+          </Link>
+
+          {/* Stat 2: Tiket Aktif */}
+          <Link href="/my/tickets" className="block group">
+            <Card className="hover:border-emerald-500/50 transition-all hover:shadow-sm cursor-pointer p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground group-hover:text-emerald-600 transition-colors">
+                  Tiket Aktif
+                </span>
+                <div className="p-1.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  <Ticket className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="mt-2 flex items-baseline justify-between">
+                <div className="text-2xl font-bold tracking-tight">{activeTicketCount ?? 0}</div>
+                <span className="text-xs text-muted-foreground flex items-center gap-0.5 group-hover:text-emerald-600 transition-colors">
+                  <span>Tiket saya</span>
+                  <ArrowRight className="h-3 w-3" />
+                </span>
+              </div>
+            </Card>
+          </Link>
+
+          {/* Stat 3: Event Mendatang */}
+          <Link href="/my/registrations" className="block group">
+            <Card className="hover:border-sky-500/50 transition-all hover:shadow-sm cursor-pointer p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground group-hover:text-sky-600 transition-colors">
+                  Event Mendatang
+                </span>
+                <div className="p-1.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400">
+                  <Calendar className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="mt-2 flex items-baseline justify-between">
+                <div className="text-2xl font-bold tracking-tight">{upcomingRegisteredCount}</div>
+                <span className="text-xs text-muted-foreground flex items-center gap-0.5 group-hover:text-sky-600 transition-colors">
+                  <span>Agenda</span>
+                  <ArrowRight className="h-3 w-3" />
+                </span>
+              </div>
+            </Card>
+          </Link>
+        </div>
+
+        {/* Struktur Konten: 2 Kolom Asimetris Seimbang */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          {/* Kolom Kiri (2/3): Pendaftaran Terbaru & Rekomendasi Event */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Seksi 1: Pendaftaran Terbaru */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <div>
+                  <CardTitle className="text-base font-semibold">Pendaftaran Terbaru</CardTitle>
+                  <CardDescription className="text-xs">Kegiatan kampus yang baru Anda ikuti</CardDescription>
+                </div>
+                {recentRegistrations.length > 0 && (
+                  <Link href="/my/registrations">
+                    <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-7 px-2">
+                      <span>Lihat Semua</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </Link>
+                )}
+              </CardHeader>
+              <CardContent>
+                {recentRegistrations.length > 0 ? (
+                  <div className="space-y-3">
+                    {recentRegistrations.map((item) => {
+                      const countdown = getEventCountdown(item.event?.event_date || null)
+                      const isFree = item.event?.price === 0
+                      const isPaid = item.payment?.status === 'PAID'
+                      const isPending = item.payment?.status === 'PENDING'
+
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg border bg-card hover:bg-muted/40 transition-colors"
+                        >
+                          <div className="space-y-1 min-w-0">
+                            <Link
+                              href={`/events/${item.event?.id}`}
+                              className="font-medium text-sm hover:text-primary hover:underline transition-colors block truncate"
+                            >
+                              {item.event?.title}
+                            </Link>
+                            <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3 text-muted-foreground" />
+                                {formatDate(item.event?.event_date || '')}
+                              </span>
+                              {countdown && (
+                                <Badge variant={countdown.variant} className="text-[10px] h-4 px-1.5 py-0 font-medium">
+                                  {countdown.text}
+                                </Badge>
+                              )}
+                              <span>•</span>
+                              <span className="truncate">{item.event?.location}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                            {/* Badge Status Pembayaran & Keikutsertaan */}
+                            {isFree ? (
+                              <Badge variant="success" className="gap-1 text-xs">
+                                <CheckCircle2 className="h-3 w-3" />
+                                <span>GRATIS</span>
+                              </Badge>
+                            ) : isPaid ? (
+                              <Badge variant="success" className="gap-1 text-xs">
+                                <CheckCircle2 className="h-3 w-3" />
+                                <span>LUNAS</span>
+                              </Badge>
+                            ) : isPending ? (
+                              <Badge variant="warning" className="gap-1 text-xs">
+                                <Clock3 className="h-3 w-3" />
+                                <span>BELUM BAYAR</span>
+                              </Badge>
+                            ) : (
+                              <Badge variant="muted" className="text-xs">
+                                {item.payment?.status || 'TERDAFTAR'}
+                              </Badge>
+                            )}
+
+                            {/* Tombol Aksi Cepat */}
+                            {isFree || isPaid ? (
+                              <Link href="/my/tickets">
+                                <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs gap-1 hover:border-primary">
+                                  <Ticket className="h-3 w-3 text-primary" />
+                                  <span>Lihat Tiket</span>
+                                </Button>
+                              </Link>
+                            ) : isPending ? (
+                              <Link href="/my/registrations">
+                                <Button size="sm" className="h-7 px-2.5 text-xs gap-1 bg-amber-600 hover:bg-amber-700 text-white">
+                                  <Clock3 className="h-3 w-3" />
+                                  <span>Bayar</span>
+                                </Button>
+                              </Link>
+                            ) : null}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-6 text-center space-y-2">
+                    <ClipboardList className="h-6 w-6 mx-auto text-muted-foreground/60" />
+                    <p className="text-sm font-medium">Belum ada pendaftaran event</p>
+                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                      Anda belum mendaftar kegiatan apapun. Lihat rekomendasi event di bawah untuk mulai berpartisipasi!
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Seksi 2: Rekomendasi Event Mendatang (Penyeimbang Layout Kiri) */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <CardTitle className="text-base font-semibold">Event Mendatang untuk Anda</CardTitle>
+                  </div>
+                  <CardDescription className="text-xs">
+                    Kegiatan kampus pilihan yang sedang membuka pendaftaran
+                  </CardDescription>
+                </div>
+                <Link href="/events">
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-7 px-2">
+                    <span>Semua Event</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+              </CardHeader>
+              <CardContent>
+                {recommendedEvents.length > 0 ? (
+                  <div className="space-y-3">
+                    {recommendedEvents.map((event) => {
+                      const countdown = getEventCountdown(event.event_date)
+                      const isAlreadyRegistered = registeredEventIdSet.has(event.id || '')
+
+                      return (
+                        <div
+                          key={event.id}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg border bg-card hover:bg-muted/40 transition-colors"
+                        >
+                          <div className="space-y-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Link
+                                href={`/events/${event.id}`}
+                                className="font-medium text-sm hover:text-primary hover:underline transition-colors truncate"
+                              >
+                                {event.title}
+                              </Link>
+                              {event.category_name && (
+                                <Badge variant="secondary" className="text-[10px] h-4 px-1.5 py-0 font-normal">
+                                  {event.category_name}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3 text-muted-foreground" />
+                                {formatDate(event.event_date || '')}
+                              </span>
+                              {countdown && (
+                                <Badge variant={countdown.variant} className="text-[10px] h-4 px-1.5 py-0 font-medium">
+                                  {countdown.text}
+                                </Badge>
+                              )}
+                              <span>•</span>
+                              <span className="flex items-center gap-1">
+                                <Users className="h-3 w-3 text-muted-foreground" />
+                                <span>Sisa kuota: {event.remaining_quota ?? 0}</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
+                            <span className="text-xs font-semibold text-foreground">
+                              {event.price === 0 ? 'Gratis' : formatCurrency(event.price || 0)}
+                            </span>
+                            {isAlreadyRegistered ? (
+                              <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-300">
+                                Sudah Terdaftar
+                              </Badge>
+                            ) : (
+                              <Link href={`/events/${event.id}`}>
+                                <Button size="sm" variant="default" className="h-7 px-2.5 text-xs gap-1">
+                                  <span>Daftar</span>
+                                  <ArrowRight className="h-3 w-3" />
+                                </Button>
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-6 text-center text-xs text-muted-foreground">
+                    Belum ada event mendatang yang dibuka saat ini.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Kolom Kanan (1/3): Notifikasi Ringkas & Pintasan Cepat */}
+          <div className="space-y-6">
+            {/* Widget Notifikasi Terbaru */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-base font-semibold">Notifikasi</CardTitle>
+                    {(unreadNotificationCount ?? 0) > 0 && (
+                      <span className="h-2 w-2 rounded-full bg-sky-500 animate-pulse" />
+                    )}
+                  </div>
+                  <CardDescription className="text-xs">
+                    {(unreadNotificationCount ?? 0) > 0
+                      ? `${unreadNotificationCount} belum dibaca`
+                      : 'Pemberitahuan terkini'}
+                  </CardDescription>
+                </div>
+                <Link href="/notifications">
+                  <Button variant="ghost" size="sm" className="gap-1 text-xs h-7 px-2">
+                    <span>Lihat Semua</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </Button>
+                </Link>
+              </CardHeader>
+              <CardContent>
+                {recentNotifications.length > 0 ? (
+                  <div className="space-y-2">
+                    {recentNotifications.map((notif) => {
+                      const isUnread = !notif.is_read
+                      return (
+                        <div
+                          key={notif.id}
+                          className={`p-2.5 rounded-lg border text-xs transition-colors ${
+                            isUnread
+                              ? 'border-sky-300 dark:border-sky-800 bg-sky-50/60 dark:bg-sky-950/30'
+                              : 'bg-muted/10 border-border/60 text-muted-foreground'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2 justify-between">
+                            <div className="flex items-center gap-1.5 font-medium min-w-0">
+                              {isUnread && (
+                                <span className="h-1.5 w-1.5 rounded-full bg-sky-500 shrink-0" />
+                              )}
+                              <span className={`truncate ${isUnread ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                                {notif.title}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground shrink-0">
+                              {formatDate(notif.created_at)}
+                            </span>
+                          </div>
+                          <p className={`mt-1 line-clamp-1 leading-relaxed ${isUnread ? 'text-foreground/80' : 'text-muted-foreground'}`}>
+                            {notif.message}
+                          </p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-6 text-center text-xs text-muted-foreground space-y-2">
+                    <Bell className="h-5 w-5 mx-auto text-muted-foreground/50" />
+                    <p>Tidak ada notifikasi baru.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Widget Pintasan Cepat */}
+            <Card className="border-border/80">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold">Pintasan Cepat</CardTitle>
+                <CardDescription className="text-xs">
+                  Akses langsung ke menu utama
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Link href="/my/tickets" className="block">
+                  <Button variant="outline" size="sm" className="w-full justify-between text-xs h-8">
+                    <span className="flex items-center gap-2">
+                      <Ticket className="h-3.5 w-3.5 text-emerald-600" />
+                      <span>Tiket & QR Check-in</span>
+                    </span>
+                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                  </Button>
+                </Link>
+                <Link href="/my/registrations" className="block">
+                  <Button variant="outline" size="sm" className="w-full justify-between text-xs h-8">
+                    <span className="flex items-center gap-2">
+                      <ClipboardList className="h-3.5 w-3.5 text-primary" />
+                      <span>Riwayat Pendaftaran</span>
+                    </span>
+                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                  </Button>
+                </Link>
+                <Link href="/events" className="block">
+                  <Button variant="outline" size="sm" className="w-full justify-between text-xs h-8">
+                    <span className="flex items-center gap-2">
+                      <Compass className="h-3.5 w-3.5 text-sky-600" />
+                      <span>Katalog Semua Event</span>
+                    </span>
+                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </main>
     </div>
   )
