@@ -4,7 +4,7 @@ export function Footer() {
   return (
     <footer className="border-t py-6 text-center text-sm text-muted-foreground bg-background">
       <div className="container mx-auto px-4">
-        <p>&copy; 2026 CampusEvent. Sistem Manajemen Event Kampus.</p>
+        <p>&copy; 2026 CampusEvent. All rights reserved | Developed With ❤️ By Developer Kece</p>
       </div>
     </footer>
   )
