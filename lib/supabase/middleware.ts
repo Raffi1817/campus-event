@@ -46,7 +46,8 @@ export async function updateSession(request: NextRequest) {
       pathname.startsWith('/dashboard') ||
       pathname.startsWith('/events') ||
       pathname.startsWith('/my') ||
-      pathname.startsWith('/notifications')
+      pathname.startsWith('/notifications') ||
+      pathname.startsWith('/profile')
 
     if (isProtected) {
       const url = request.nextUrl.clone()

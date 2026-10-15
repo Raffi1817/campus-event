@@ -136,7 +136,27 @@ export default async function AdminDashboard() {
         </div>
 
         {/* Akses Cepat Modul Admin */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <Card className="hover:border-primary/50 transition-colors">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" />
+                <span>Kelola User</span>
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Manajemen akun, hak akses peran (Role), dan status keaktifan akun.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/admin/users">
+                <Button variant="outline" size="sm" className="gap-1.5 w-full text-xs">
+                  <span>Buka Kelola User</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
           <Card className="hover:border-primary/50 transition-colors">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">

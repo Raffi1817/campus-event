@@ -18,6 +18,8 @@ import {
   BarChart3,
   Home,
   ChevronDown,
+  User,
+  Users,
 } from 'lucide-react'
 
 interface NavbarProps {
@@ -158,6 +160,12 @@ export function Navbar({ user }: NavbarProps) {
       show: user.role === 'ADMIN',
     },
     {
+      label: 'Kelola User',
+      href: '/admin/users',
+      icon: Users,
+      show: user.role === 'ADMIN',
+    },
+    {
       label: 'Laporan',
       href: '/admin/reports',
       icon: BarChart3,
@@ -238,6 +246,14 @@ export function Navbar({ user }: NavbarProps) {
                 </div>
 
                 <div className="space-y-0.5">
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted font-medium transition-colors"
+                  >
+                    <User className="h-4 w-4 text-primary" />
+                    <span>Profil Saya</span>
+                  </Link>
                   <Link
                     href="/"
                     onClick={() => setIsDropdownOpen(false)}

@@ -76,15 +76,25 @@ export default async function Home() {
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             {user ? (
-              <Link href="/events" className={buttonVariants({ size: 'lg', className: 'gap-2 text-base' })}>
-                Jelajah Event <ArrowRight className="h-4 w-4" />
+              <Link
+                href="/events"
+                className="group inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-7 sm:px-9 rounded-xl bg-primary text-primary-foreground font-semibold text-sm sm:text-base shadow-md transition-all duration-300 hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(36,59,155,0.45)] dark:hover:shadow-[0_0_24px_rgba(255,210,63,0.45)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] tracking-wide"
+              >
+                <span>Jelajah Event</span>
+                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
               </Link>
             ) : (
               <>
-                <Link href="/register" className={buttonVariants({ size: 'lg', className: 'gap-2 text-base' })}>
-                  Mulai Sekarang <ArrowRight className="h-4 w-4" />
+                <Link
+                  href="/register"
+                  className="inline-flex items-center justify-center h-11 sm:h-12 px-7 sm:px-9 rounded-xl bg-primary text-primary-foreground font-semibold text-sm sm:text-base shadow-md transition-all duration-300 hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(36,59,155,0.45)] dark:hover:shadow-[0_0_24px_rgba(255,210,63,0.45)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] tracking-wide"
+                >
+                  Mulai Sekarang
                 </Link>
-                <Link href="/login" className={buttonVariants({ variant: 'outline', size: 'lg', className: 'text-base' })}>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center h-11 sm:h-12 px-7 sm:px-9 rounded-xl border-2 border-border bg-background text-foreground font-semibold text-sm sm:text-base shadow-sm transition-all duration-300 hover:bg-muted hover:border-border/80 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] tracking-wide"
+                >
                   Masuk ke Akun
                 </Link>
               </>

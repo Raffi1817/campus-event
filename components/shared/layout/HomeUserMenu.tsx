@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useTransition } from 'react'
 import { logoutAction } from '@/lib/actions/auth'
 import Link from 'next/link'
-import { LayoutDashboard, LogOut, Loader2, ChevronDown } from 'lucide-react'
+import { LayoutDashboard, LogOut, Loader2, ChevronDown, User } from 'lucide-react'
 
 interface HomeUserMenuProps {
   user: {
@@ -105,6 +105,14 @@ export function HomeUserMenu({ user }: HomeUserMenuProps) {
           </div>
 
           <div className="space-y-0.5">
+            <Link
+              href="/profile"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted font-medium transition-colors"
+            >
+              <User className="h-4 w-4 text-primary" />
+              <span>Profil Saya</span>
+            </Link>
             <Link
               href={user.dashboardUrl}
               onClick={() => setIsOpen(false)}

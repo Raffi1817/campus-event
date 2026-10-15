@@ -14,3 +14,9 @@ export {
   markNotificationAsReadAction,
   markAllNotificationsAsReadAction,
 } from './notifications'
+export {
+  createUserAction,
+  updateUserAction,
+  setUserActiveAction,
+} from './users'
+export { updateMyNameAction } from './profile'
