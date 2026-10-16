@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate, formatTime } from '@/lib/utils'
 import { TicketWithDetails } from '@/types/tickets'
+import { QRCodeSVG } from 'qrcode.react'
 import {
   Calendar,
   Clock,
@@ -16,6 +17,8 @@ import {
   AlertCircle,
   XCircle,
   Tag,
+  Maximize2,
+  X,
 } from 'lucide-react'
 
 interface TicketCardProps {
@@ -24,6 +27,7 @@ interface TicketCardProps {
 
 export function TicketCard({ ticket }: TicketCardProps) {
   const [copied, setCopied] = useState(false)
+  const [isZoomOpen, setIsZoomOpen] = useState(false)
 
   const reg = ticket.registration
   const event = reg?.event
@@ -205,36 +209,43 @@ export function TicketCard({ ticket }: TicketCardProps) {
           </div>
         </div>
 
-        {/* QR Code Pattern Visual Display */}
-        <div className="p-3 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs flex flex-col items-center">
-          <div className="w-24 h-24 bg-slate-950 text-white dark:bg-white dark:text-slate-950 p-2 rounded-xl flex items-center justify-center">
-            {/* Visual SVG QR graphic pattern */}
-            <svg
-              className="w-full h-full"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect width="5" height="5" x="3" y="3" rx="1" fill="currentColor" />
-              <rect width="5" height="5" x="16" y="3" rx="1" fill="currentColor" />
-              <rect width="5" height="5" x="3" y="16" rx="1" fill="currentColor" />
-              <path d="M21 16h-3a2 2 0 0 0-2 2v3" />
-              <path d="M21 21v.01" />
-              <path d="M12 7v3a2 2 0 0 1-2 2H7" />
-              <path d="M3 12h.01" />
-              <path d="M12 3h.01" />
-              <path d="M12 16v.01" />
-              <path d="M16 12h1" />
-              <path d="M21 12v.01" />
-              <path d="M12 21v-2" />
-            </svg>
+        {/* QR Code Asli & Tombol Perbesar */}
+        <div className="p-3 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs flex flex-col items-center space-y-2">
+          <div
+            onClick={() => setIsZoomOpen(true)}
+            className="relative group cursor-pointer p-2 bg-white rounded-xl border border-slate-100 shadow-2xs transition-transform hover:scale-105"
+            title="Klik untuk memperbesar QR Code"
+          >
+            <QRCodeSVG
+              value={ticket.ticket_code}
+              size={96}
+              level="M"
+              className={ticket.status !== 'ACTIVE' ? 'opacity-30 grayscale' : ''}
+            />
+            {ticket.status === 'USED' && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl backdrop-blur-[1px]">
+                <span className="text-[10px] font-bold text-white bg-emerald-600 px-2 py-0.5 rounded-full shadow-xs">
+                  USED
+                </span>
+              </div>
+            )}
+            {ticket.status === 'CANCELLED' && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl backdrop-blur-[1px]">
+                <span className="text-[10px] font-bold text-white bg-rose-600 px-2 py-0.5 rounded-full shadow-xs">
+                  CANCELLED
+                </span>
+              </div>
+            )}
           </div>
-          <span className="text-[10px] text-muted-foreground mt-1.5 font-medium">
-            Tunjukkan saat Check-in
-          </span>
+
+          <button
+            type="button"
+            onClick={() => setIsZoomOpen(true)}
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline cursor-pointer"
+          >
+            <Maximize2 className="h-3 w-3" />
+            <span>Perbesar QR</span>
+          </button>
         </div>
 
         {/* Status Check-in Kehadiran */}
@@ -252,6 +263,67 @@ export function TicketCard({ ticket }: TicketCardProps) {
           )}
         </div>
       </div>
+
+      {/* Modal Zoom QR Code Layar Penuh */}
+      {isZoomOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="w-full max-w-sm rounded-2xl border bg-background p-6 shadow-2xl space-y-4 text-center">
+            <div className="flex items-center justify-between border-b pb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                QR Code Tiket
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsZoomOpen(false)}
+                className="text-muted-foreground hover:text-foreground rounded-lg p-1 transition-colors cursor-pointer"
+                aria-label="Tutup"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div>
+              <h3 className="font-bold text-base text-foreground line-clamp-1">
+                {event?.title || 'Campus Event'}
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {student?.full_name} {student?.nim ? `(${student.nim})` : ''}
+              </p>
+            </div>
+
+            {/* Container QR Code Besar */}
+            <div className="flex justify-center py-2">
+              <div className="p-4 bg-white rounded-2xl border-2 border-slate-200 shadow-md">
+                <QRCodeSVG
+                  value={ticket.ticket_code}
+                  size={200}
+                  level="H"
+                  className={ticket.status !== 'ACTIVE' ? 'opacity-40 grayscale' : ''}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <span className="font-mono text-lg font-extrabold tracking-widest text-primary">
+                {ticket.ticket_code}
+              </span>
+              <p className="text-[11px] text-muted-foreground">
+                Tunjukkan QR Code ini kepada panitia saat registrasi di lokasi acara.
+              </p>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setIsZoomOpen(false)}
+                className="w-full py-2 px-4 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-semibold text-xs transition-colors cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

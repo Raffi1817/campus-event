@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useRef, useTransition } from 'react'
+import { useState, useRef, useTransition, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { checkInAction, CheckInSuccessData } from '@/lib/actions/checkin'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { QrScanner } from './QrScanner'
 import { toast } from 'sonner'
 import {
   QrCode,
@@ -18,6 +19,8 @@ import {
   Ticket,
   Clock,
   Sparkles,
+  Camera,
+  Keyboard,
 } from 'lucide-react'
 
 interface CheckInScannerFormProps {
@@ -36,6 +39,7 @@ export function CheckInScannerForm({
   eventStatus,
 }: CheckInScannerFormProps) {
   const router = useRouter()
+  const [activeTab, setActiveTab] = useState<'CAMERA' | 'MANUAL'>('CAMERA')
   const [ticketCode, setTicketCode] = useState('')
   const [isPending, startTransition] = useTransition()
   const [lastSuccess, setLastSuccess] = useState<ScanResult | null>(null)
@@ -44,91 +48,133 @@ export function CheckInScannerForm({
 
   const isEventOngoing = eventStatus === 'ONGOING'
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const cleanedCode = ticketCode.trim().toUpperCase()
-    if (!cleanedCode) {
-      toast.error('Silakan masukkan kode tiket')
-      inputRef.current?.focus()
-      return
-    }
-
-    if (!isEventOngoing) {
-      toast.error('Check-in hanya dapat dilakukan saat event berstatus ONGOING', {
-        description: `Status event saat ini adalah "${eventStatus}". Silakan ubah status event ke ONGOING terlebih dahulu.`,
-      })
-      return
-    }
-
-    setLastError(null)
-
-    startTransition(async () => {
-      const res = await checkInAction({
-        ticketCode: cleanedCode,
-        eventId,
-      })
-
-      if (res.ok) {
-        const timeNow = new Intl.DateTimeFormat('id-ID', {
-          timeZone: 'Asia/Jakarta',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        }).format(new Date())
-
-        setLastSuccess({
-          participant_name: res.data.participant_name,
-          ticket_code: res.data.ticket_code,
-          event_title: res.data.event_title,
-          timestamp: `${timeNow} WIB`,
-        })
-        setLastError(null)
-        setTicketCode('')
-
-        toast.success(`Check-in Berhasil: ${res.data.participant_name}`, {
-          description: `Tiket ${res.data.ticket_code} telah diverifikasi.`,
-        })
-
-        // Refresh halaman agar tabel riwayat kehadiran terbarukan secara instan
-        router.refresh()
-
-        // Fokuskan kembali input untuk memproses peserta berikutnya dengan cepat
-        setTimeout(() => {
-          inputRef.current?.focus()
-        }, 100)
-      } else {
-        setLastError(res.error)
-        setLastSuccess(null)
-        toast.error('Check-in Ditolak', {
-          description: res.error,
-        })
-        inputRef.current?.select()
+  const processCheckIn = useCallback(
+    (codeToVerify: string) => {
+      const cleanedCode = codeToVerify.trim().toUpperCase()
+      if (!cleanedCode) {
+        toast.error('Silakan masukkan kode tiket')
+        if (activeTab === 'MANUAL') inputRef.current?.focus()
+        return
       }
-    })
+
+      if (!isEventOngoing) {
+        toast.error('Check-in hanya dapat dilakukan saat event berstatus ONGOING', {
+          description: `Status event saat ini adalah "${eventStatus}". Silakan ubah status event ke ONGOING terlebih dahulu.`,
+        })
+        return
+      }
+
+      setLastError(null)
+
+      startTransition(async () => {
+        const res = await checkInAction({
+          ticketCode: cleanedCode,
+          eventId,
+        })
+
+        if (res.ok) {
+          const timeNow = new Intl.DateTimeFormat('id-ID', {
+            timeZone: 'Asia/Jakarta',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          }).format(new Date())
+
+          setLastSuccess({
+            participant_name: res.data.participant_name,
+            ticket_code: res.data.ticket_code,
+            event_title: res.data.event_title,
+            timestamp: `${timeNow} WIB`,
+          })
+          setLastError(null)
+          setTicketCode('')
+
+          toast.success(`Check-in Berhasil: ${res.data.participant_name}`, {
+            description: `Tiket ${res.data.ticket_code} telah diverifikasi.`,
+          })
+
+          // Refresh halaman agar tabel riwayat kehadiran terbarukan secara instan
+          router.refresh()
+
+          if (activeTab === 'MANUAL') {
+            setTimeout(() => {
+              inputRef.current?.focus()
+            }, 100)
+          }
+        } else {
+          setLastError(res.error)
+          setLastSuccess(null)
+          toast.error('Check-in Ditolak', {
+            description: res.error,
+          })
+          if (activeTab === 'MANUAL') {
+            inputRef.current?.select()
+          }
+        }
+      })
+    },
+    [activeTab, eventId, eventStatus, isEventOngoing, router]
+  )
+
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    processCheckIn(ticketCode)
   }
 
   const handleReset = () => {
     setTicketCode('')
     setLastError(null)
     setLastSuccess(null)
-    inputRef.current?.focus()
+    if (activeTab === 'MANUAL') {
+      inputRef.current?.focus()
+    }
   }
 
   return (
     <Card className="border shadow-sm overflow-hidden bg-card">
       <CardHeader className="bg-muted/30 border-b pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-primary/10 text-primary">
               <QrCode className="h-5 w-5" />
             </div>
             <div>
               <CardTitle className="text-lg font-bold">Verifikasi & Check-in Tiket</CardTitle>
               <CardDescription className="text-xs">
-                Presensi untuk <span className="font-semibold text-foreground">{eventTitle}</span>. Masukkan kode tiket resmi mahasiswa.
+                Presensi untuk <span className="font-semibold text-foreground">{eventTitle}</span>
               </CardDescription>
             </div>
+          </div>
+
+          {/* Switch Tab: Kamera vs Manual */}
+          <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 p-1 bg-muted/50 self-start sm:self-auto text-xs">
+            <button
+              type="button"
+              onClick={() => setActiveTab('CAMERA')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+                activeTab === 'CAMERA'
+                  ? 'bg-background text-foreground shadow-2xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Camera className="h-3.5 w-3.5" />
+              <span>Scan Kamera</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('MANUAL')
+                setTimeout(() => inputRef.current?.focus(), 100)
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+                activeTab === 'MANUAL'
+                  ? 'bg-background text-foreground shadow-2xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Keyboard className="h-3.5 w-3.5" />
+              <span>Ketik Manual</span>
+            </button>
           </div>
         </div>
       </CardHeader>
@@ -157,79 +203,95 @@ export function CheckInScannerForm({
           </div>
         )}
 
-        {/* Form Input Kode Tiket */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label
-              htmlFor="ticketCodeInput"
-              className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block"
-            >
-              Kode Tiket Peserta
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
-                <Ticket className="h-4 w-4" />
-              </div>
-              <Input
-                id="ticketCodeInput"
-                ref={inputRef}
-                type="text"
-                autoComplete="off"
-                autoCorrect="off"
-                spellCheck="false"
-                placeholder="CE-XXXXXXXXXX"
-                value={ticketCode}
-                onChange={(e) => setTicketCode(e.target.value.toUpperCase())}
-                disabled={isPending || !isEventOngoing}
-                className="pl-10 pr-10 h-12 text-base sm:text-lg font-mono font-bold tracking-wider uppercase bg-background"
-                autoFocus
-              />
-              {ticketCode && (
-                <button
-                  type="button"
-                  onClick={() => setTicketCode('')}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-muted-foreground hover:text-foreground"
-                >
-                  <XCircle className="h-4 w-4" />
-                </button>
-              )}
-            </div>
+        {/* Mode Scanner Kamera */}
+        {activeTab === 'CAMERA' && (
+          <div className="py-2">
+            <QrScanner
+              onScanSuccess={processCheckIn}
+              isProcessing={isPending}
+              paused={!isEventOngoing}
+            />
           </div>
+        )}
 
-          <div className="flex items-center gap-2 pt-1">
-            <Button
-              type="submit"
-              disabled={isPending || !ticketCode.trim() || !isEventOngoing}
-              className="flex-1 h-11 text-sm font-bold gap-2 shadow-sm"
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Memverifikasi...</span>
-                </>
-              ) : (
-                <>
-                  <UserCheck className="h-4 w-4" />
-                  <span>Proses Check-in</span>
-                </>
-              )}
-            </Button>
-
-            {(lastSuccess || lastError || ticketCode) && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleReset}
-                disabled={isPending}
-                className="h-11 px-3 text-xs gap-1.5"
-                title="Bersihkan status verifikasi"
+        {/* Mode Form Input Kode Tiket Manual */}
+        {activeTab === 'MANUAL' && (
+          <form onSubmit={handleManualSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label
+                htmlFor="ticketCodeInput"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block"
               >
-                <RotateCcw className="h-4 w-4" />
-                <span className="hidden sm:inline">Reset</span>
+                Kode Tiket Peserta
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
+                  <Ticket className="h-4 w-4" />
+                </div>
+                <Input
+                  id="ticketCodeInput"
+                  ref={inputRef}
+                  type="text"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck="false"
+                  placeholder="CE-XXXXXXXXXX"
+                  value={ticketCode}
+                  onChange={(e) => setTicketCode(e.target.value.toUpperCase())}
+                  disabled={isPending || !isEventOngoing}
+                  className="pl-10 pr-10 h-12 text-base sm:text-lg font-mono font-bold tracking-wider uppercase bg-background"
+                  autoFocus
+                />
+                {ticketCode && (
+                  <button
+                    type="button"
+                    onClick={() => setTicketCode('')}
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    <XCircle className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <Button
+                type="submit"
+                disabled={isPending || !ticketCode.trim() || !isEventOngoing}
+                className="flex-1 h-11 text-sm font-bold gap-2 shadow-sm"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Memverifikasi...</span>
+                  </>
+                ) : (
+                  <>
+                    <UserCheck className="h-4 w-4" />
+                    <span>Proses Check-in</span>
+                  </>
+                )}
               </Button>
-            )}
+            </div>
+          </form>
+        )}
+
+        {/* Tombol Reset Global */}
+        {(lastSuccess || lastError || ticketCode) && (
+          <div className="flex justify-end pt-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleReset}
+              disabled={isPending}
+              className="text-xs gap-1.5 h-8 text-muted-foreground hover:text-foreground"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>Bersihkan Notifikasi</span>
+            </Button>
           </div>
-        </form>
+        )}
 
         {/* Kartu Feedback Sukses */}
         {lastSuccess && (
