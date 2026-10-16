@@ -13,6 +13,7 @@ import { EventStatus } from '@/types'
 import { toast } from 'sonner'
 import { Loader2, ArrowLeft, Trash2, CheckCircle2, PlayCircle, XCircle } from 'lucide-react'
 import Link from 'next/link'
+import { PosterUpload } from './PosterUpload'
 
 interface CategoryOption {
   id: string
@@ -425,18 +426,12 @@ export function EventForm({ categories, initialData, isEditMode = false }: Event
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="poster_url">URL Gambar Poster (Opsional)</Label>
-              <Input
-                id="poster_url"
-                type="url"
+              <Label>Poster Event (Opsional)</Label>
+              <PosterUpload
                 value={posterUrl}
-                onChange={(e) => setPosterUrl(e.target.value)}
-                placeholder="https://images.unsplash.com/..."
+                onChange={(url) => setPosterUrl(url)}
                 disabled={isFinalStatus || isSubmitting}
               />
-              <p className="text-xs text-muted-foreground">
-                Tautan gambar publik untuk poster event. Jika dikosongkan, placeholder otomatis akan digunakan.
-              </p>
             </div>
 
             <div className="space-y-1.5">
