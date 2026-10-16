@@ -14,6 +14,7 @@ import {
   CreditCard,
   Building2,
   ExternalLink,
+  Download,
 } from 'lucide-react'
 
 export interface AdminEventReportItem {
@@ -132,15 +133,27 @@ export function AdminReportsView({
           </Button>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handlePrint}
-          className="text-xs gap-1.5"
-        >
-          <Printer className="h-3.5 w-3.5" />
-          <span>Cetak Laporan</span>
-        </Button>
+        <div className="flex items-center gap-2 print:hidden">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrint}
+            className="text-xs gap-1.5"
+          >
+            <Printer className="h-3.5 w-3.5" />
+            <span>Cetak Laporan</span>
+          </Button>
+          <a href="/admin/reports/export" download className="inline-flex">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs gap-1.5"
+            >
+              <Download className="h-3.5 w-3.5 text-primary" />
+              <span>Unduh CSV</span>
+            </Button>
+          </a>
+        </div>
       </div>
 
       {/* Konten Tab: REKAP EVENT */}

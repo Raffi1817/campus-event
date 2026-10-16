@@ -20,6 +20,7 @@ import {
   Mail,
   GraduationCap,
   QrCode,
+  Download,
 } from 'lucide-react'
 
 export const instant = false
@@ -181,9 +182,19 @@ export default async function EventParticipantsPage({ params }: EventParticipant
             <ArrowLeft className="h-4 w-4" />
             <span>Kembali ke Daftar Event</span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <a
+              href={`/panitia/events/${id}/participants/export`}
+              download
+              className="inline-flex"
+            >
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs h-9 font-medium shadow-2xs">
+                <Download className="h-4 w-4 text-primary" />
+                <span>Unduh CSV Peserta</span>
+              </Button>
+            </a>
             <Link href={`/panitia/events/${id}/checkin`}>
-              <Button size="sm" className="gap-1.5 text-xs h-9 font-semibold">
+              <Button size="sm" className="gap-1.5 text-xs h-9 font-semibold shadow-2xs">
                 <QrCode className="h-4 w-4" />
                 <span>Buka Meja Check-in</span>
               </Button>

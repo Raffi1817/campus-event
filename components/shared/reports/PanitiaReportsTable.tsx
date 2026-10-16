@@ -12,6 +12,7 @@ import {
   Calendar,
   Search,
   Printer,
+  Download,
 } from 'lucide-react'
 
 export interface PanitiaEventReportItem {
@@ -104,6 +105,16 @@ export function PanitiaReportsTable({ events }: PanitiaReportsTableProps) {
             <Printer className="h-3.5 w-3.5" />
             <span>Cetak Rekap</span>
           </Button>
+          <a href="/panitia/reports/export" download className="print:hidden inline-flex">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs gap-1.5"
+            >
+              <Download className="h-3.5 w-3.5 text-primary" />
+              <span>Unduh CSV</span>
+            </Button>
+          </a>
         </div>
       </div>
 
