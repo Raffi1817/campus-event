@@ -89,10 +89,6 @@ export function CheckInScannerForm({
           setLastError(null)
           setTicketCode('')
 
-          toast.success(`Check-in Berhasil: ${res.data.participant_name}`, {
-            description: `Tiket ${res.data.ticket_code} telah diverifikasi.`,
-          })
-
           // Refresh halaman agar tabel riwayat kehadiran terbarukan secara instan
           router.refresh()
 

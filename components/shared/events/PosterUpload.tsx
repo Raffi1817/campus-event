@@ -93,7 +93,6 @@ export function PosterUpload({ value = '', onChange, disabled = false }: PosterU
       } = supabase.storage.from('event-posters').getPublicUrl(filePath)
 
       onChange(publicUrl)
-      toast.success('Poster berhasil diunggah')
     } catch {
       toast.error('Terjadi gangguan saat memproses berkas poster.')
     } finally {
@@ -140,7 +139,6 @@ export function PosterUpload({ value = '', onChange, disabled = false }: PosterU
 
   const handleRemovePoster = () => {
     onChange('')
-    toast.info('Poster dihapus dari form.')
   }
 
   return (

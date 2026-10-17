@@ -58,8 +58,7 @@ export default function RegisterPage() {
         return
       }
 
-      toast.success('Pendaftaran berhasil! Silakan masuk dengan akun baru Anda.')
-      router.push('/login')
+      router.push('/login?registered=1')
     } catch {
       toast.error('Terjadi kesalahan saat mendaftar.')
       setLoading(false)

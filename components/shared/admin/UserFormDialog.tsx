@@ -98,7 +98,6 @@ function UserFormModalContent({
           return
         }
 
-        toast.success('Data pengguna berhasil diperbarui')
         onSuccess(
           {
             ...userToEdit,
@@ -123,7 +122,6 @@ function UserFormModalContent({
           return
         }
 
-        toast.success('Pengguna baru berhasil ditambahkan')
         onSuccess(
           {
             id: res.data.id,

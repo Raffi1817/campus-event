@@ -103,12 +103,6 @@ export function UserManager({ initialUsers, currentAdminId }: UserManagerProps) 
         return
       }
 
-      toast.success(
-        newStatus
-          ? `Akun ${userToToggle.full_name} berhasil diaktifkan kembali`
-          : `Akun ${userToToggle.full_name} berhasil dinonaktifkan`
-      )
-
       setUsers((prev) =>
         prev.map((u) => (u.id === userToToggle.id ? { ...u, is_active: newStatus } : u))
       )

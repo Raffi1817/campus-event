@@ -78,11 +78,6 @@ export function EventRegisterButton({
 
       setIsRegistered(true)
       setIsModalOpen(false)
-      if (isFree) {
-        toast.success('Pendaftaran berhasil! Event gratis, tiket langsung diterbitkan.')
-      } else {
-        toast.success('Pendaftaran berhasil! Silakan cek menu Pendaftaran Saya untuk instruksi pembayaran.')
-      }
       router.refresh()
     } catch {
       toast.error('Terjadi kesalahan saat memproses pendaftaran')

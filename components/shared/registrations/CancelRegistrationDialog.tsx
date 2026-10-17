@@ -29,7 +29,6 @@ export function CancelRegistrationDialog({
         return
       }
 
-      toast.success('Pendaftaran berhasil dibatalkan. Kuota telah dikembalikan.')
       setIsOpen(false)
       router.refresh()
     } catch {

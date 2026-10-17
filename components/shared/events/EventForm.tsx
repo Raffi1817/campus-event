@@ -93,7 +93,6 @@ export function EventForm({ categories, initialData, isEditMode = false }: Event
         if (!res.ok) {
           toast.error(res.error)
         } else {
-          toast.success('Rincian event berhasil diperbarui')
           router.refresh()
         }
       } else {
@@ -101,7 +100,6 @@ export function EventForm({ categories, initialData, isEditMode = false }: Event
         if (!res.ok) {
           toast.error(res.error)
         } else {
-          toast.success('Event berhasil dibuat sebagai DRAFT')
           router.push('/panitia/events')
         }
       }
@@ -128,7 +126,6 @@ export function EventForm({ categories, initialData, isEditMode = false }: Event
       if (!res.ok) {
         toast.error(res.error)
       } else {
-        toast.success(`Status event berhasil diubah menjadi ${newStatus}`)
         router.refresh()
       }
     } catch {
@@ -148,7 +145,6 @@ export function EventForm({ categories, initialData, isEditMode = false }: Event
       if (!res.ok) {
         toast.error(res.error)
       } else {
-        toast.success('Draft event berhasil dihapus')
         router.push('/panitia/events')
       }
     } catch {

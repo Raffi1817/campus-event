@@ -18,11 +18,13 @@ export function ProfileForm({ initialProfile }: ProfileFormProps) {
   const [fullName, setFullName] = useState(initialProfile.full_name)
   const [isPending, startTransition] = useTransition()
   const [hasChanged, setHasChanged] = useState(false)
+  const [justSaved, setJustSaved] = useState(false)
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
     setFullName(val)
     setHasChanged(val.trim() !== initialProfile.full_name)
+    if (justSaved) setJustSaved(false)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -44,8 +46,9 @@ export function ProfileForm({ initialProfile }: ProfileFormProps) {
       if (!res.ok) {
         toast.error(res.error)
       } else {
-        toast.success('Nama profil berhasil diperbarui!')
+        setJustSaved(true)
         setHasChanged(false)
+        setTimeout(() => setJustSaved(false), 3000)
       }
     })
   }
@@ -174,11 +177,17 @@ export function ProfileForm({ initialProfile }: ProfileFormProps) {
             <span className="text-xs text-muted-foreground">
               {hasChanged ? 'Ada perubahan yang belum disimpan.' : 'Profil Anda sudah yang terbaru.'}
             </span>
-            <Button
-              type="submit"
-              disabled={isPending || !hasChanged}
-              className="gap-2 font-medium"
-            >
+            <div className="flex items-center gap-2.5">
+              {justSaved && (
+                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 animate-in fade-in duration-200">
+                  Tersimpan ✓
+                </span>
+              )}
+              <Button
+                type="submit"
+                disabled={isPending || !hasChanged}
+                className="gap-2 font-medium"
+              >
               {isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -191,6 +200,7 @@ export function ProfileForm({ initialProfile }: ProfileFormProps) {
                 </>
               )}
             </Button>
+            </div>
           </CardFooter>
         </form>
       </Card>

@@ -543,44 +543,6 @@ export default async function MahasiswaDashboard() {
               </CardContent>
             </Card>
 
-            {/* Widget Pintasan Cepat */}
-            <Card className="border-border/80">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold">Pintasan Cepat</CardTitle>
-                <CardDescription className="text-xs">
-                  Akses langsung ke menu utama
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Link href="/my/tickets" className="block">
-                  <Button variant="outline" size="sm" className="w-full justify-between text-xs h-8">
-                    <span className="flex items-center gap-2">
-                      <Ticket className="h-3.5 w-3.5 text-emerald-600" />
-                      <span>Tiket & QR Check-in</span>
-                    </span>
-                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                  </Button>
-                </Link>
-                <Link href="/my/registrations" className="block">
-                  <Button variant="outline" size="sm" className="w-full justify-between text-xs h-8">
-                    <span className="flex items-center gap-2">
-                      <ClipboardList className="h-3.5 w-3.5 text-primary" />
-                      <span>Riwayat Pendaftaran</span>
-                    </span>
-                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                  </Button>
-                </Link>
-                <Link href="/events" className="block">
-                  <Button variant="outline" size="sm" className="w-full justify-between text-xs h-8">
-                    <span className="flex items-center gap-2">
-                      <Compass className="h-3.5 w-3.5 text-sky-600" />
-                      <span>Katalog Semua Event</span>
-                    </span>
-                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </main>

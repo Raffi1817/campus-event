@@ -103,7 +103,7 @@ export function Navbar({ user }: NavbarProps) {
       label: 'Jelajah Event',
       href: '/events',
       icon: Compass,
-      show: true,
+      show: user.role !== 'ADMIN',
     },
     {
       label: 'Pendaftaran Saya',
@@ -181,7 +181,7 @@ export function Navbar({ user }: NavbarProps) {
             CampusEvent
           </Link>
           <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getRoleBadgeClass()}`}>
-            {user.role}
+            {user.role === 'MAHASISWA' ? 'Mahasiswa' : user.role === 'PANITIA' ? 'Panitia' : 'Admin'}
           </span>
 
           {/* Desktop Navigation Links */}
@@ -240,7 +240,7 @@ export function Navbar({ user }: NavbarProps) {
                   <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                   <div className="mt-1.5">
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${getRoleBadgeClass()}`}>
-                      {user.role}
+                      {user.role === 'MAHASISWA' ? 'Mahasiswa' : user.role === 'PANITIA' ? 'Panitia' : 'Admin'}
                     </span>
                   </div>
                 </div>

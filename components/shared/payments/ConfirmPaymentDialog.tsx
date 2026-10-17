@@ -46,16 +46,6 @@ export function ConfirmPaymentDialog({
         return
       }
 
-      if (res.data.status === 'PAID') {
-        toast.success(`Pembayaran Cash ${studentName} berhasil dikonfirmasi LUNAS!`, {
-          description: 'Tiket mahasiswa telah diterbitkan secara otomatis.',
-        })
-      } else {
-        toast.warning(`Pembayaran Cash ${studentName} ditolak.`, {
-          description: 'Status pembayaran diubah menjadi FAILED.',
-        })
-      }
-
       setIsOpen(false)
       setActionType(null)
       router.refresh()

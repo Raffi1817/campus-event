@@ -17,6 +17,7 @@ function LoginContent() {
   const searchParams = useSearchParams()
   const redirectPath = searchParams.get('redirect')
   const errorParam = searchParams.get('error')
+  const registeredParam = searchParams.get('registered')
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -48,7 +49,6 @@ function LoginContent() {
         return
       }
 
-      toast.success('Berhasil masuk!')
       const targetUrl =
         redirectPath ||
         (result.data.role === 'ADMIN'
@@ -73,6 +73,10 @@ function LoginContent() {
             {errorParam === 'deactivated' ? (
               <span className="font-medium text-destructive">
                 Akun Anda telah dinonaktifkan oleh administrator.
+              </span>
+            ) : registeredParam === '1' ? (
+              <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                Pendaftaran akun berhasil! Silakan masuk dengan akun Anda.
               </span>
             ) : (
               'Masukkan email dan password akun Anda'

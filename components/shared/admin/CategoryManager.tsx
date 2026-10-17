@@ -63,7 +63,6 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
         if (!res.ok) {
           toast.error(res.error)
         } else {
-          toast.success('Kategori berhasil diperbarui')
           setCategories((prev) =>
             prev.map((c) =>
               c.id === editingId
@@ -81,7 +80,6 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
         if (!res.ok) {
           toast.error(res.error)
         } else {
-          toast.success('Kategori baru berhasil ditambahkan')
           setCategories((prev) => [
             ...prev,
             {
@@ -112,7 +110,6 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
       if (!res.ok) {
         toast.error(res.error)
       } else {
-        toast.success(`Kategori "${cat.name}" berhasil dihapus`)
         setCategories((prev) => prev.filter((c) => c.id !== cat.id))
       }
     } catch {

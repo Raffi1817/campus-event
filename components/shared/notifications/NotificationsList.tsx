@@ -47,8 +47,6 @@ export function NotificationsList({ initialNotifications }: NotificationsListPro
       setReadingId(null)
       if (!res.ok) {
         toast.error(res.error)
-      } else {
-        toast.success('Notifikasi ditandai sebagai dibaca')
       }
     })
   }
@@ -58,8 +56,6 @@ export function NotificationsList({ initialNotifications }: NotificationsListPro
       const res = await markAllNotificationsAsReadAction()
       if (!res.ok) {
         toast.error(res.error)
-      } else {
-        toast.success('Semua notifikasi ditandai sebagai sudah dibaca')
       }
     })
   }

@@ -51,16 +51,6 @@ export function PaymentDialog({
         return
       }
 
-      if (res.data.status === 'PAID') {
-        toast.success('Pembayaran berhasil! Tiket Anda telah diterbitkan.', {
-          description: 'Cek tiket Anda di menu "Tiket Saya".',
-        })
-      } else {
-        toast.info('Metode Tunai dipilih (Status: PENDING).', {
-          description: 'Silakan serahkan pembayaran tunai ke panitia event untuk dikonfirmasi.',
-        })
-      }
-
       setIsOpen(false)
       router.refresh()
     } catch {
