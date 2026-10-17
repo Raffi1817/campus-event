@@ -45,18 +45,21 @@ export default async function AdminDashboard() {
     { count: totalEvents },
     { count: totalRegistrations },
     { count: totalCheckIns },
+    { count: totalValidTickets },
     { data: paidPayments },
   ] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
     supabase.from('events').select('*', { count: 'exact', head: true }),
     supabase.from('registrations').select('*', { count: 'exact', head: true }),
     supabase.from('checkins').select('*', { count: 'exact', head: true }),
+    supabase.from('tickets').select('*', { count: 'exact', head: true }).in('status', ['ACTIVE', 'USED']),
     supabase.from('payments').select('amount').eq('status', 'PAID'),
   ])
 
   // Perhitungan D19: Total transaksi (jumlah pembayaran PAID + total nominalnya)
   const paidCount = paidPayments?.length ?? 0
   const totalGrossRevenue = (paidPayments || []).reduce((acc, p) => acc + (p.amount || 0), 0)
+  const attendanceRate = totalValidTickets ? Math.round(((totalCheckIns ?? 0) / totalValidTickets) * 100) : 0
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -109,16 +112,20 @@ export default async function AdminDashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Pendaftar & Hadir</CardTitle>
+              <CardTitle className="text-sm font-medium">Kehadiran (Check-in)</CardTitle>
               <QrCode className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalCheckIns ?? 0} / {totalRegistrations ?? 0}</div>
+              <div className="text-2xl font-bold">
+                {totalCheckIns ?? 0}{' '}
+                <span className="text-sm font-normal text-muted-foreground">/ {totalValidTickets ?? 0} tiket</span>
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Rasio hadir:{' '}
                 <span className="font-semibold text-primary">
-                  {totalRegistrations ? Math.round(((totalCheckIns ?? 0) / totalRegistrations) * 100) : 0}%
+                  {attendanceRate}%
                 </span>
+                <span className="text-[11px] text-muted-foreground"> ({totalRegistrations ?? 0} total pendaftar)</span>
               </p>
             </CardContent>
           </Card>

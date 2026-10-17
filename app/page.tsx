@@ -64,7 +64,7 @@ export default async function Home() {
         <section className="container mx-auto px-4 py-20 text-center lg:py-28">
           <div className="inline-flex items-center gap-2 rounded-full border bg-background px-4 py-1.5 text-sm text-muted-foreground shadow-sm mb-6">
             <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
-            Platform Resmi Manajemen Event Kampus
+            Sistem Informasi Manajemen Event Kampus
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl text-foreground">
             Temukan dan Ikuti Berbagai <br className="hidden sm:inline" />
@@ -120,7 +120,7 @@ export default async function Home() {
               </div>
               <h3 className="font-semibold text-lg">Khusus Panitia</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Kelola kuota peserta, pantau bukti transaksi, serta verifikasi kehadiran secara real-time.
+                Kelola kuota peserta, pantau pendaftar, konfirmasi pembayaran tunai, serta verifikasi kehadiran via kode tiket & QR.
               </p>
             </div>
 

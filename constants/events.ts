@@ -4,7 +4,7 @@ export type EventStatus = Database['public']['Enums']['event_status']
 
 export const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
   DRAFT: 'Draft',
-  PUBLISHED: 'Dipublikasikan',
+  PUBLISHED: 'Pendaftaran Dibuka',
   ONGOING: 'Sedang Berlangsung',
   COMPLETED: 'Selesai',
   CANCELLED: 'Dibatalkan',
@@ -12,12 +12,12 @@ export const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
 
 export const EVENT_STATUS_BADGE_VARIANTS: Record<
   EventStatus,
-  'default' | 'secondary' | 'destructive' | 'outline'
+  'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' | 'info' | 'muted'
 > = {
-  DRAFT: 'secondary',
-  PUBLISHED: 'default',
-  ONGOING: 'default',
-  COMPLETED: 'secondary',
+  DRAFT: 'muted',
+  PUBLISHED: 'info',
+  ONGOING: 'success',
+  COMPLETED: 'muted',
   CANCELLED: 'destructive',
 }
 

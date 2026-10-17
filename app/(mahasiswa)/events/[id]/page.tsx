@@ -17,6 +17,8 @@ import {
   AlertCircle,
 } from 'lucide-react'
 import { EventRegisterButton } from '@/components/shared/registrations'
+import { EventStatusBadge } from '@/components/shared/events'
+import { EVENT_STATUS_LABELS, type EventStatus } from '@/constants/events'
 
 export const instant = false
 
@@ -75,20 +77,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     }
   }
 
-  const getStatusBadge = () => {
-    switch (event.status) {
-      case 'PUBLISHED':
-        return <Badge variant="success">Pendaftaran Dibuka</Badge>
-      case 'ONGOING':
-        return <Badge variant="info">Sedang Berlangsung</Badge>
-      case 'COMPLETED':
-        return <Badge variant="muted">Selesai</Badge>
-      case 'CANCELLED':
-        return <Badge variant="destructive">Dibatalkan</Badge>
-      default:
-        return <Badge variant="secondary">{event.status}</Badge>
-    }
-  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -132,7 +120,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
               <div className="p-6 space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  {getStatusBadge()}
+                  <EventStatusBadge status={event.status} />
                   <Badge variant="outline">{event.category_name}</Badge>
                 </div>
 
@@ -232,7 +220,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                       <span>
                         {isPast
                           ? 'Pendaftaran ditutup karena event ini sudah lewat.'
-                          : `Pendaftaran tidak dibuka (status event saat ini: ${event.status}).`}
+                          : `Pendaftaran tidak dibuka (status event saat ini: ${EVENT_STATUS_LABELS[event.status as EventStatus] || event.status}).`}
                       </span>
                     </div>
                   ) : isFull ? (

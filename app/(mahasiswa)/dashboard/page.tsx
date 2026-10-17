@@ -22,20 +22,21 @@ import Link from 'next/link'
 
 export const instant = false
 
-// Helper untuk menghitung mundur hari pelaksanaan event
+// Helper untuk menghitung mundur hari pelaksanaan event (zona WIB)
 function getEventCountdown(eventDateStr: string | null) {
   if (!eventDateStr) return null
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  // Gunakan tanggal kalender WIB hari ini
+  const todayWibStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date())
+  const [tY, tM, tD] = todayWibStr.split('-').map(Number)
+  const todayUtc = Date.UTC(tY, tM - 1, tD)
 
   const [year, month, day] = eventDateStr.split('-').map(Number)
   if (!year || !month || !day) return null
 
-  const eventDate = new Date(year, month - 1, day)
-  eventDate.setHours(0, 0, 0, 0)
+  const eventDateUtc = Date.UTC(year, month - 1, day)
 
-  const diffMs = eventDate.getTime() - today.getTime()
+  const diffMs = eventDateUtc - todayUtc
   const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
 
   if (diffDays < 0) {
@@ -68,7 +69,10 @@ export default async function MahasiswaDashboard() {
     .eq('id', user.id)
     .single()
 
-  const todayStr = new Date().toISOString().split('T')[0]
+  if (profile?.role === 'ADMIN') redirect('/admin/dashboard')
+  if (profile?.role === 'PANITIA') redirect('/panitia/dashboard')
+
+  const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date())
 
   // 1. Ambil seluruh data pendaftaran mahasiswa untuk perhitungan metrik
   const { data: allUserRegs } = await supabase
@@ -340,8 +344,8 @@ export default async function MahasiswaDashboard() {
                                 <span>BELUM BAYAR</span>
                               </Badge>
                             ) : (
-                              <Badge variant="muted" className="text-xs">
-                                {item.payment?.status || 'TERDAFTAR'}
+                              <Badge variant={item.payment?.status === 'FAILED' ? 'destructive' : 'muted'} className="text-xs">
+                                {item.payment?.status === 'FAILED' ? 'GAGAL' : (item.payment?.status || 'TERDAFTAR')}
                               </Badge>
                             )}
 

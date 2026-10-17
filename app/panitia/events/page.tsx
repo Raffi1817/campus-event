@@ -4,10 +4,10 @@ import { connection } from 'next/server'
 import { Navbar } from '@/components/shared/layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate, formatTime } from '@/lib/utils'
 import Link from 'next/link'
 import { PlusCircle, Calendar, MapPin, Users, Edit3, ExternalLink, QrCode } from 'lucide-react'
+import { EventStatusBadge } from '@/components/shared/events'
 
 export const instant = false
 
@@ -39,20 +39,6 @@ export default async function PanitiaEventsPage() {
     .eq('organizer_id', user.id)
     .order('created_at', { ascending: false })
 
-  const getStatusBadgeVariant = (status: string | null) => {
-    switch (status) {
-      case 'PUBLISHED':
-        return 'success'
-      case 'ONGOING':
-        return 'info'
-      case 'COMPLETED':
-        return 'muted'
-      case 'CANCELLED':
-        return 'destructive'
-      default:
-        return 'secondary'
-    }
-  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -109,9 +95,7 @@ export default async function PanitiaEventsPage() {
               <Card key={event.id} className="flex flex-col justify-between hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
-                    <Badge variant={getStatusBadgeVariant(event.status)}>
-                      {event.status}
-                    </Badge>
+                    <EventStatusBadge status={event.status} />
                     <span className="text-xs font-semibold px-2 py-0.5 rounded bg-muted text-muted-foreground">
                       {event.category_name}
                     </span>

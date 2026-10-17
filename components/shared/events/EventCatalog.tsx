@@ -3,12 +3,12 @@
 import { useState, useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatDate, formatTime } from '@/lib/utils'
 import Link from 'next/link'
 import { Search, Calendar, MapPin, Users, Ticket, ArrowRight, Layers } from 'lucide-react'
 import { EventWithStats } from '@/types'
+import { EventStatusBadge } from './EventStatusBadge'
 
 interface CategoryOption {
   id: string
@@ -39,21 +39,6 @@ export function EventCatalog({ events, categories }: EventCatalogProps) {
       return matchQuery && matchCategory
     })
   }, [events, searchQuery, selectedCategory])
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'PUBLISHED':
-        return <Badge variant="default">Pendaftaran Dibuka</Badge>
-      case 'ONGOING':
-        return <Badge variant="secondary">Sedang Berlangsung</Badge>
-      case 'COMPLETED':
-        return <Badge variant="outline">Selesai</Badge>
-      case 'CANCELLED':
-        return <Badge variant="destructive">Dibatalkan</Badge>
-      default:
-        return <Badge variant="secondary">{status}</Badge>
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -165,7 +150,7 @@ export function EventCatalog({ events, categories }: EventCatalogProps) {
                     )}
 
                     <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
-                      {getStatusBadge(ev.status || '')}
+                      <EventStatusBadge status={ev.status} />
                     </div>
 
                     <div className="absolute bottom-2.5 right-2.5">

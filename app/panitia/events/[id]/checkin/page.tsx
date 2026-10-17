@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { formatDate, formatTime } from '@/lib/utils'
 import { CheckInScannerForm } from '@/components/shared/checkin'
+import { EventStatusBadge } from '@/components/shared/events'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -118,11 +119,12 @@ export default async function PanitiaCheckInPage({ params }: PanitiaCheckInPageP
 
   const checkins = (rawCheckins || []) as unknown as CheckedInItem[]
 
-  // Hitung total tiket yang diterbitkan (ACTIVE atau USED)
+  // Hitung total tiket sah yang diterbitkan (ACTIVE atau USED) - tidak termasuk CANCELLED (B2)
   const { count: totalTicketsCount } = await supabase
     .from('tickets')
     .select('id, registration:registrations!inner(event_id)', { count: 'exact', head: true })
     .eq('registration.event_id', id)
+    .in('status', ['ACTIVE', 'USED'])
 
   const totalTickets = totalTicketsCount ?? 0
   const checkedInCount = checkins.length
@@ -140,21 +142,6 @@ export default async function PanitiaCheckInPage({ params }: PanitiaCheckInPageP
       }).format(d) + ' WIB'
     } catch {
       return timestamp
-    }
-  }
-
-  const getStatusBadgeVariant = (status: string | null) => {
-    switch (status) {
-      case 'ONGOING':
-        return 'default'
-      case 'PUBLISHED':
-        return 'outline'
-      case 'COMPLETED':
-        return 'secondary'
-      case 'CANCELLED':
-        return 'destructive'
-      default:
-        return 'secondary'
     }
   }
 
@@ -207,9 +194,7 @@ export default async function PanitiaCheckInPage({ params }: PanitiaCheckInPageP
                   <Tag className="h-3 w-3" />
                   <span>{event.category_name}</span>
                 </Badge>
-                <Badge variant={getStatusBadgeVariant(event.status)}>
-                  {event.status}
-                </Badge>
+                <EventStatusBadge status={event.status} />
               </div>
 
               {event.status === 'ONGOING' ? (
