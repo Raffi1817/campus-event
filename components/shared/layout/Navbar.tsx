@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition } from 'react'
 import { logoutAction } from '@/lib/actions/auth'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -34,7 +35,23 @@ export function Navbar({ user }: NavbarProps) {
   const pathname = usePathname()
   const [isLoggingOut, startLogoutTransition] = useTransition()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState<number>(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (user.role !== 'MAHASISWA') return
+
+    const supabase = createClient()
+    supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_read', false)
+      .then(({ count }) => {
+        if (typeof count === 'number') {
+          setUnreadCount(count)
+        }
+      })
+  }, [user.role, pathname])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -191,6 +208,7 @@ export function Navbar({ user }: NavbarProps) {
               .map((link) => {
                 const isActive = pathname === link.href || (link.href !== getHomeLink() && pathname.startsWith(link.href))
                 const Icon = link.icon
+                const isNotif = link.href === '/notifications' && unreadCount > 0
                 return (
                   <Link
                     key={link.href}
@@ -201,8 +219,21 @@ export function Navbar({ user }: NavbarProps) {
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
+                    <div className="relative">
+                      <Icon className="h-4 w-4" />
+                      {isNotif && (
+                        <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                        </span>
+                      )}
+                    </div>
                     <span>{link.label}</span>
+                    {isNotif && (
+                      <span className="ml-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-red-500 rounded-full">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
                   </Link>
                 )
               })}
@@ -306,6 +337,7 @@ export function Navbar({ user }: NavbarProps) {
           .map((link) => {
             const isActive = pathname === link.href || (link.href !== getHomeLink() && pathname.startsWith(link.href))
             const Icon = link.icon
+            const isNotif = link.href === '/notifications' && unreadCount > 0
             return (
               <Link
                 key={link.href}
@@ -316,8 +348,18 @@ export function Navbar({ user }: NavbarProps) {
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <Icon className="h-3.5 w-3.5" />
+                <div className="relative">
+                  <Icon className="h-3.5 w-3.5" />
+                  {isNotif && (
+                    <span className="absolute -top-0.5 -right-0.5 inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                  )}
+                </div>
                 <span>{link.label}</span>
+                {isNotif && (
+                  <span className="ml-0.5 inline-flex items-center justify-center px-1.5 py-0.2 text-[9px] font-bold leading-none text-white bg-red-500 rounded-full">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </Link>
             )
           })}

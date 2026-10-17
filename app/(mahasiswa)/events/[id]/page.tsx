@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import { connection } from 'next/server'
 import { Navbar } from '@/components/shared/layout'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatCurrency, formatDate, formatTime } from '@/lib/utils'
 import Link from 'next/link'
@@ -87,7 +88,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           email: user.email || '',
         }}
       />
-      <main className="container mx-auto p-4 md:p-6 space-y-6 max-w-5xl">
+      <main className="container mx-auto p-4 md:p-6 pb-24 md:pb-6 space-y-6 max-w-5xl">
         <Link
           href="/events"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -246,6 +247,52 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </div>
+
+        {/* Mobile Sticky Action Bar */}
+        <div className="fixed bottom-0 left-0 right-0 z-30 p-3 bg-background/95 backdrop-blur-md border-t border-border md:hidden flex items-center justify-between gap-3 shadow-lg">
+          <div>
+            <span className="text-[10px] uppercase font-bold text-muted-foreground block leading-tight">
+              Biaya Partisipasi
+            </span>
+            <span className="text-base font-extrabold text-primary leading-tight">
+              {event.price === 0 ? 'Gratis' : formatCurrency(event.price || 0)}
+            </span>
+            <span className="text-[10px] text-muted-foreground block leading-tight">
+              Sisa {event.remaining_quota} kursi
+            </span>
+          </div>
+
+          <div className="flex-1 max-w-[210px]">
+            {isRegistered ? (
+              <Link href="/my/registrations" className="block w-full">
+                <Button size="sm" variant="outline" className="w-full text-xs font-semibold border-emerald-500 text-emerald-600 dark:text-emerald-400">
+                  Sudah Terdaftar ✓
+                </Button>
+              </Link>
+            ) : !isRegistrationOpen ? (
+              <Button size="sm" disabled variant="outline" className="w-full text-xs font-semibold">
+                Ditutup
+              </Button>
+            ) : isFull ? (
+              <Button size="sm" disabled variant="destructive" className="w-full text-xs font-semibold">
+                Kuota Penuh
+              </Button>
+            ) : !isStudent ? (
+              <Button size="sm" disabled variant="outline" className="w-full text-xs font-semibold">
+                Hanya Mahasiswa
+              </Button>
+            ) : (
+              <EventRegisterButton
+                eventId={event.id || id}
+                eventTitle={event.title || 'Campus Event'}
+                isFree={event.price === 0}
+                price={event.price || 0}
+                isRegistered={false}
+                remainingQuota={event.remaining_quota ?? 0}
+              />
+            )}
           </div>
         </div>
       </main>

@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { connection } from 'next/server'
 import { Navbar } from '@/components/shared/layout'
-import { TicketCard } from '@/components/shared/tickets'
+import { TicketsView } from '@/components/shared/tickets'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { TicketWithDetails } from '@/types/tickets'
@@ -167,11 +167,7 @@ export default async function MyTicketsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6">
-            {tickets.map((ticket) => (
-              <TicketCard key={ticket.id} ticket={ticket} />
-            ))}
-          </div>
+          <TicketsView tickets={tickets} />
         )}
       </main>
     </div>

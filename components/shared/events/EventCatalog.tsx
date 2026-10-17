@@ -23,11 +23,36 @@ interface EventCatalogProps {
 export function EventCatalog({ events, categories }: EventCatalogProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL')
+  const [statusFilter, setStatusFilter] = useState<'ACTIVE' | 'ARCHIVE' | 'ALL'>('ACTIVE')
+  const [priceFilter, setPriceFilter] = useState<'ALL' | 'FREE' | 'PAID'>('ALL')
+
+  const activeCount = useMemo(
+    () => events.filter((e) => e.status === 'PUBLISHED' || e.status === 'ONGOING').length,
+    [events]
+  )
+  const archiveCount = useMemo(
+    () => events.filter((e) => e.status === 'COMPLETED' || e.status === 'CANCELLED').length,
+    [events]
+  )
 
   const filteredEvents = useMemo(() => {
     return events.filter((ev) => {
       // Hanya tampilkan event non-draft di katalog publik
       if (ev.status === 'DRAFT') return false
+
+      if (statusFilter === 'ACTIVE' && ev.status !== 'PUBLISHED' && ev.status !== 'ONGOING') {
+        return false
+      }
+      if (statusFilter === 'ARCHIVE' && ev.status !== 'COMPLETED' && ev.status !== 'CANCELLED') {
+        return false
+      }
+
+      if (priceFilter === 'FREE' && (ev.price ?? 0) > 0) {
+        return false
+      }
+      if (priceFilter === 'PAID' && (ev.price ?? 0) === 0) {
+        return false
+      }
 
       const titleMatch = (ev.title || '').toLowerCase().includes(searchQuery.toLowerCase())
       const locationMatch = (ev.location || '').toLowerCase().includes(searchQuery.toLowerCase())
@@ -38,19 +63,78 @@ export function EventCatalog({ events, categories }: EventCatalogProps) {
 
       return matchQuery && matchCategory
     })
-  }, [events, searchQuery, selectedCategory])
+  }, [events, searchQuery, selectedCategory, statusFilter, priceFilter])
+
+  const hasActiveFilters =
+    searchQuery !== '' ||
+    selectedCategory !== 'ALL' ||
+    priceFilter !== 'ALL' ||
+    statusFilter !== 'ACTIVE'
+
+  const handleResetFilters = () => {
+    setSearchQuery('')
+    setSelectedCategory('ALL')
+    setPriceFilter('ALL')
+    setStatusFilter('ACTIVE')
+  }
 
   return (
     <div className="space-y-6">
       {/* Header & Filter Bar */}
       <div className="space-y-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Jelajah Event Kampus</h1>
-          <p className="text-muted-foreground mt-1">
-            Temukan seminar, workshop, kompetisi, dan berbagai kegiatan menarik di kampus Anda.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Jelajah Event Kampus</h1>
+            <p className="text-muted-foreground mt-1">
+              Temukan seminar, workshop, kompetisi, dan berbagai kegiatan menarik di kampus Anda.
+            </p>
+          </div>
+
+          {/* Status Tabs (Aktif vs Arsip vs Semua) */}
+          <div className="flex items-center gap-1.5 p-1 bg-muted/60 rounded-xl border self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setStatusFilter('ACTIVE')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                statusFilter === 'ACTIVE'
+                  ? 'bg-background text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <span>Dibuka & Berlangsung</span>
+              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-primary/10 text-primary">
+                {activeCount}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('ARCHIVE')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                statusFilter === 'ARCHIVE'
+                  ? 'bg-background text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <span>Arsip Selesai</span>
+              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-muted text-muted-foreground">
+                {archiveCount}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('ALL')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                statusFilter === 'ALL'
+                  ? 'bg-background text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Semua
+            </button>
+          </div>
         </div>
 
+        {/* Search Bar & Filter Options */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -63,33 +147,80 @@ export function EventCatalog({ events, categories }: EventCatalogProps) {
             />
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+          {/* Price Quick Filters */}
+          <div className="flex items-center gap-1.5 bg-muted/40 p-1 rounded-xl border shrink-0">
             <button
               type="button"
-              onClick={() => setSelectedCategory('ALL')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                selectedCategory === 'ALL'
-                  ? 'bg-primary text-primary-foreground shadow-sm'
+              onClick={() => setPriceFilter('ALL')}
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                priceFilter === 'ALL'
+                  ? 'bg-background text-foreground shadow-xs font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Semua Tarif
+            </button>
+            <button
+              type="button"
+              onClick={() => setPriceFilter('FREE')}
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                priceFilter === 'FREE'
+                  ? 'bg-emerald-600 text-white shadow-xs font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Gratis
+            </button>
+            <button
+              type="button"
+              onClick={() => setPriceFilter('PAID')}
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                priceFilter === 'PAID'
+                  ? 'bg-primary text-primary-foreground shadow-xs font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Berbayar
+            </button>
+          </div>
+        </div>
+
+        {/* Category Pills & Reset */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+          <button
+            type="button"
+            onClick={() => setSelectedCategory('ALL')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
+              selectedCategory === 'ALL'
+                ? 'bg-primary text-primary-foreground shadow-xs'
+                : 'bg-muted text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Semua Kategori
+          </button>
+          {categories.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setSelectedCategory(c.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                selectedCategory === c.id
+                  ? 'bg-primary text-primary-foreground shadow-xs'
                   : 'bg-muted text-muted-foreground hover:text-foreground'
               }`}
             >
-              Semua Kategori
+              {c.name}
             </button>
-            {categories.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setSelectedCategory(c.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                  selectedCategory === c.id
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'bg-muted text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {c.name}
-              </button>
-            ))}
-          </div>
+          ))}
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium text-destructive hover:bg-destructive/10 whitespace-nowrap transition-colors ml-auto cursor-pointer"
+            >
+              Reset Filter
+            </button>
+          )}
         </div>
       </div>
 
@@ -102,19 +233,16 @@ export function EventCatalog({ events, categories }: EventCatalogProps) {
             </div>
             <h3 className="font-semibold text-lg">Tidak Ada Event Ditemukan</h3>
             <p className="text-sm text-muted-foreground max-w-sm mt-1">
-              {searchQuery || selectedCategory !== 'ALL'
-                ? 'Tidak ada event yang cocok dengan kriteria pencarian atau kategori ini.'
+              {hasActiveFilters
+                ? 'Tidak ada event yang cocok dengan kriteria pencarian atau filter yang dipilih.'
                 : 'Belum ada event yang dibuka untuk umum saat ini. Silakan periksa kembali nanti.'}
             </p>
-            {(searchQuery || selectedCategory !== 'ALL') && (
+            {hasActiveFilters && (
               <Button
                 variant="outline"
                 size="sm"
                 className="mt-4"
-                onClick={() => {
-                  setSearchQuery('')
-                  setSelectedCategory('ALL')
-                }}
+                onClick={handleResetFilters}
               >
                 Reset Filter
               </Button>
