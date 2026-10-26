@@ -202,6 +202,7 @@ export type Database = {
           id: string
           method: Database["public"]["Enums"]["payment_method"] | null
           paid_at: string | null
+          proof_url: string | null
           registration_id: string
           status: Database["public"]["Enums"]["payment_status"]
         }
@@ -211,6 +212,7 @@ export type Database = {
           id?: string
           method?: Database["public"]["Enums"]["payment_method"] | null
           paid_at?: string | null
+          proof_url?: string | null
           registration_id: string
           status?: Database["public"]["Enums"]["payment_status"]
         }
@@ -220,6 +222,7 @@ export type Database = {
           id?: string
           method?: Database["public"]["Enums"]["payment_method"] | null
           paid_at?: string | null
+          proof_url?: string | null
           registration_id?: string
           status?: Database["public"]["Enums"]["payment_status"]
         }
@@ -414,6 +417,7 @@ export type Database = {
         Args: {
           p_method: Database["public"]["Enums"]["payment_method"]
           p_registration_id: string
+          p_proof_url?: string | null
         }
         Returns: Database["public"]["Enums"]["payment_status"]
       }

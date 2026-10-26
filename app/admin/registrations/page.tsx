@@ -72,6 +72,7 @@ export default async function AdminRegistrationsPage() {
         amount,
         method,
         status,
+        proof_url,
         paid_at
       )
     `)
@@ -100,6 +101,7 @@ export default async function AdminRegistrationsPage() {
       amount: number
       method: string | null
       status: 'PENDING' | 'PAID' | 'FAILED'
+      proof_url: string | null
       paid_at: string | null
     } | null
   }
@@ -307,12 +309,14 @@ export default async function AdminRegistrationsPage() {
                         <td className="px-4 py-3.5 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-2">
                             {item.payment?.status === 'PENDING' &&
-                              item.payment?.method === 'CASH' && (
+                              Boolean(item.payment?.method) && (
                                 <ConfirmPaymentDialog
                                   registrationId={item.id}
                                   studentName={item.student?.full_name || 'Mahasiswa'}
                                   eventTitle={item.event?.title || 'Event'}
                                   amount={item.payment?.amount ?? item.event?.price ?? 0}
+                                  method={item.payment?.method}
+                                  proofUrl={item.payment?.proof_url}
                                 />
                               )}
                             {item.event && (

@@ -71,6 +71,7 @@ export default async function MyRegistrationsPage() {
         amount,
         method,
         status,
+        proof_url,
         paid_at
       )
     `)
@@ -97,6 +98,7 @@ export default async function MyRegistrationsPage() {
       amount: number
       method: string | null
       status: 'PENDING' | 'PAID' | 'FAILED'
+      proof_url: string | null
       paid_at: string | null
     } | null
   }
@@ -126,6 +128,14 @@ export default async function MyRegistrationsPage() {
             <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-300 dark:border-amber-800">
               <Banknote className="h-3 w-3" />
               <span>Menunggu Konfirmasi Cash</span>
+            </span>
+          )
+        }
+        if (method === 'TRANSFER_BANK' || method === 'E_WALLET') {
+          return (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-400 border border-blue-300 dark:border-blue-800">
+              <Clock3 className="h-3 w-3" />
+              <span>Menunggu Verifikasi Bukti</span>
             </span>
           )
         }
@@ -296,6 +306,27 @@ export default async function MyRegistrationsPage() {
                               <p className="text-[10px] text-muted-foreground leading-tight">
                                 Menunggu konfirmasi panitia di meja registrasi.
                               </p>
+                            </div>
+                          ) : payment?.method === 'TRANSFER_BANK' || payment?.method === 'E_WALLET' ? (
+                            <div className="space-y-1.5">
+                              <div className="text-blue-700 dark:text-blue-400 font-medium flex items-center gap-1 text-[11px]">
+                                <Clock3 className="h-3.5 w-3.5" />
+                                <span>Bukti Terkirim</span>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground leading-tight">
+                                Menunggu panitia memverifikasi bukti bayar Anda.
+                              </p>
+                              {payment?.proof_url && (
+                                <a
+                                  href={payment.proof_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline font-semibold"
+                                >
+                                  <span>Lihat Bukti Terkirim</span>
+                                  <ExternalLink className="h-2.5 w-2.5" />
+                                </a>
+                              )}
                             </div>
                           ) : (
                             <div className="space-y-1">

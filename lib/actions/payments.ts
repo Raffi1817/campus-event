@@ -71,6 +71,7 @@ export async function payRegistrationAction(
   const { data, error } = await auth.supabase.rpc('pay_registration', {
     p_registration_id: parsed.data.registrationId,
     p_method: parsed.data.method,
+    p_proof_url: parsed.data.proofUrl || null,
   })
 
   if (error) {

@@ -86,6 +86,7 @@ export default async function EventParticipantsPage({ params }: EventParticipant
         amount,
         method,
         status,
+        proof_url,
         paid_at
       ),
       ticket:tickets (
@@ -115,6 +116,7 @@ export default async function EventParticipantsPage({ params }: EventParticipant
       amount: number
       method: string | null
       status: 'PENDING' | 'PAID' | 'FAILED'
+      proof_url: string | null
       paid_at: string | null
     } | null
     ticket: {
@@ -304,8 +306,8 @@ export default async function EventParticipantsPage({ params }: EventParticipant
                   </thead>
                   <tbody className="divide-y">
                     {participants.map((item, idx) => {
-                      const isPendingCash =
-                        item.payment?.status === 'PENDING' && item.payment?.method === 'CASH'
+                      const isPendingConfirmation =
+                        item.payment?.status === 'PENDING' && Boolean(item.payment?.method)
                       const isPaid = item.payment?.status === 'PAID'
                       const isFailed = item.payment?.status === 'FAILED'
                       const checkinItem = Array.isArray(item.ticket?.checkins)
@@ -358,13 +360,15 @@ export default async function EventParticipantsPage({ params }: EventParticipant
                             {formatDate(item.created_at)}
                           </td>
                           <td className="px-4 py-3.5 text-xs text-right whitespace-nowrap">
-                            {isPendingCash ? (
+                            {isPendingConfirmation ? (
                               <div className="flex justify-end">
                                 <ConfirmPaymentDialog
                                   registrationId={item.id}
                                   studentName={item.student?.full_name || 'Mahasiswa'}
                                   eventTitle={event.title || 'Event'}
                                   amount={item.payment?.amount ?? event.price ?? 0}
+                                  method={item.payment?.method}
+                                  proofUrl={item.payment?.proof_url}
                                 />
                               </div>
                             ) : isPaid ? (

@@ -6,12 +6,17 @@ import { confirmPaymentAction } from '@/lib/actions/payments'
 import { formatCurrency } from '@/lib/utils'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import {
   CheckCircle2,
   XCircle,
   Loader2,
   AlertTriangle,
   Banknote,
+  Building2,
+  Smartphone,
+  ExternalLink,
+  Eye,
   X,
 } from 'lucide-react'
 
@@ -20,6 +25,8 @@ interface ConfirmPaymentDialogProps {
   studentName: string
   eventTitle: string
   amount: number
+  method?: string | null
+  proofUrl?: string | null
 }
 
 export function ConfirmPaymentDialog({
@@ -27,11 +34,14 @@ export function ConfirmPaymentDialog({
   studentName,
   eventTitle,
   amount,
+  method = 'CASH',
+  proofUrl = null,
 }: ConfirmPaymentDialogProps) {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [actionType, setActionType] = useState<'APPROVE' | 'REJECT' | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
   const handleConfirm = async (approve: boolean) => {
     setIsSubmitting(true)
@@ -46,6 +56,12 @@ export function ConfirmPaymentDialog({
         return
       }
 
+      toast.success(
+        approve
+          ? 'Pembayaran berhasil disetujui. Tiket resmi telah diterbitkan.'
+          : 'Pembayaran ditolak. Notifikasi telah dikirim ke mahasiswa.'
+      )
+
       setIsOpen(false)
       setActionType(null)
       router.refresh()
@@ -55,6 +71,33 @@ export function ConfirmPaymentDialog({
       setIsSubmitting(false)
     }
   }
+
+  const getMethodBadge = () => {
+    switch (method) {
+      case 'TRANSFER_BANK':
+        return {
+          label: 'Transfer Bank',
+          icon: Building2,
+          className: 'text-blue-700 dark:text-blue-400',
+        }
+      case 'E_WALLET':
+        return {
+          label: 'E-Wallet / QRIS',
+          icon: Smartphone,
+          className: 'text-emerald-700 dark:text-emerald-400',
+        }
+      case 'CASH':
+      default:
+        return {
+          label: 'Tunai (Cash)',
+          icon: Banknote,
+          className: 'text-amber-700 dark:text-amber-400',
+        }
+    }
+  }
+
+  const methodInfo = getMethodBadge()
+  const MethodIcon = methodInfo.icon
 
   return (
     <>
@@ -87,7 +130,7 @@ export function ConfirmPaymentDialog({
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-2xl border bg-background p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-lg rounded-2xl border bg-background p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-start justify-between gap-3 border-b pb-4">
               <div className="flex items-center gap-2">
@@ -103,11 +146,11 @@ export function ConfirmPaymentDialog({
                 <div>
                   <h3 className="text-lg font-bold tracking-tight text-foreground">
                     {actionType === 'APPROVE'
-                      ? 'Konfirmasi Pembayaran Cash'
-                      : 'Tolak Pembayaran Cash'}
+                      ? 'Konfirmasi Pembayaran Event'
+                      : 'Tolak Pembayaran Event'}
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    Verifikasi pembayaran tunai di meja registrasi
+                    Verifikasi pembayaran peserta event kampus
                   </p>
                 </div>
               </div>
@@ -128,29 +171,68 @@ export function ConfirmPaymentDialog({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Event:</span>
-                <span className="font-semibold text-foreground line-clamp-1 max-w-[200px] text-right">
+                <span className="font-semibold text-foreground line-clamp-1 max-w-[220px] text-right">
                   {eventTitle}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Metode:</span>
-                <span className="inline-flex items-center gap-1 font-semibold text-amber-700 dark:text-amber-400">
-                  <Banknote className="h-3.5 w-3.5" />
-                  <span>Tunai (Cash)</span>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Metode Pembayaran:</span>
+                <span className={`inline-flex items-center gap-1 font-semibold ${methodInfo.className}`}>
+                  <MethodIcon className="h-3.5 w-3.5" />
+                  <span>{methodInfo.label}</span>
                 </span>
               </div>
               <div className="border-t pt-2 flex justify-between items-center text-sm">
-                <span className="font-semibold text-foreground">Nominal Uang:</span>
+                <span className="font-semibold text-foreground">Nominal Tagihan:</span>
                 <span className="font-extrabold text-primary text-base">
                   {formatCurrency(amount)}
                 </span>
               </div>
             </div>
 
+            {/* Bukti Pembayaran (jika ada) */}
+            {proofUrl && (
+              <div className="space-y-2 border rounded-xl p-3 bg-muted/20">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-foreground flex items-center gap-1.5">
+                    <Eye className="h-3.5 w-3.5 text-primary" />
+                    <span>Bukti Transfer / E-Wallet Mahasiswa:</span>
+                  </span>
+                  <a
+                    href={proofUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-primary hover:underline flex items-center gap-1"
+                  >
+                    <span>Buka Penuh</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+
+                <div
+                  onClick={() => setIsPreviewOpen(true)}
+                  className="relative h-44 w-full rounded-lg overflow-hidden border bg-background cursor-pointer hover:opacity-95 transition-opacity group"
+                >
+                  <Image
+                    src={proofUrl}
+                    alt="Bukti Pembayaran"
+                    fill
+                    className="object-contain"
+                  />
+                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold gap-1.5">
+                    <Eye className="h-4 w-4" />
+                    <span>Klik untuk memperbesar</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <p className="text-xs text-muted-foreground leading-relaxed">
               {actionType === 'APPROVE'
-                ? 'Pastikan uang tunai sejumlah di atas telah diterima dari mahasiswa. Setelah disetujui, tiket resmi akan langsung terbit.'
-                : 'Menolak pembayaran akan mengubah status menjadi FAILED. Mahasiswa dapat memilih metode pembayaran kembali jika ingin mencoba lagi.'}
+                ? proofUrl
+                  ? 'Pastikan nominal bukti transfer/e-wallet telah sesuai dan dana telah masuk ke rekening/akun panitia. Setelah disetujui, tiket barcode resmi akan langsung diterbitkan untuk mahasiswa.'
+                  : 'Pastikan uang tunai telah diterima dari mahasiswa. Setelah disetujui, tiket resmi akan langsung terbit.'
+                : 'Menolak pembayaran akan mengubah status menjadi FAILED. Mahasiswa dapat mengunggah bukti baru atau memilih metode lain.'}
             </p>
 
             {/* Tombol Aksi */}
@@ -160,40 +242,63 @@ export function ConfirmPaymentDialog({
                 size="sm"
                 onClick={() => setIsOpen(false)}
                 disabled={isSubmitting}
-                className="text-xs h-8"
+                className="text-xs h-9"
               >
                 Batal
               </Button>
-              {actionType === 'APPROVE' ? (
-                <Button
-                  size="sm"
-                  onClick={() => handleConfirm(true)}
-                  disabled={isSubmitting}
-                  className="text-xs h-8 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
-                >
-                  {isSubmitting ? (
+              <Button
+                size="sm"
+                variant={actionType === 'APPROVE' ? 'default' : 'destructive'}
+                onClick={() => handleConfirm(actionType === 'APPROVE')}
+                disabled={isSubmitting}
+                className={`text-xs h-9 min-w-32 font-semibold gap-1.5 ${
+                  actionType === 'APPROVE'
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    : ''
+                }`}
+              >
+                {isSubmitting ? (
+                  <>
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
+                    <span>Memproses...</span>
+                  </>
+                ) : actionType === 'APPROVE' ? (
+                  <>
                     <CheckCircle2 className="h-3.5 w-3.5" />
-                  )}
-                  <span>Ya, Setujui Lunas</span>
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => handleConfirm(false)}
-                  disabled={isSubmitting}
-                  className="text-xs h-8 gap-1.5 font-semibold"
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
+                    <span>Setujui Pembayaran</span>
+                  </>
+                ) : (
+                  <>
                     <XCircle className="h-3.5 w-3.5" />
-                  )}
-                  <span>Ya, Tolak Pembayaran</span>
-                </Button>
-              )}
+                    <span>Tolak Pembayaran</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Zoom Gambar Bukti */}
+      {isPreviewOpen && proofUrl && (
+        <div
+          onClick={() => setIsPreviewOpen(false)}
+          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-150 cursor-zoom-out"
+        >
+          <div className="relative max-w-3xl max-h-[90vh] w-full h-[80vh] flex flex-col items-center justify-center">
+            <button
+              onClick={() => setIsPreviewOpen(false)}
+              className="absolute -top-10 right-0 text-white hover:text-muted-foreground p-1"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <div className="relative w-full h-full">
+              <Image
+                src={proofUrl}
+                alt="Bukti Pembayaran Penuh"
+                fill
+                className="object-contain"
+              />
             </div>
           </div>
         </div>
