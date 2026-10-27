@@ -251,7 +251,7 @@ export default async function Home() {
                     href="/register"
                     className="inline-flex items-center justify-center h-11 px-7 rounded-xl bg-[#FFD23F] text-[#14172B] font-semibold text-sm shadow-sm transition-all hover:brightness-95 active:scale-[0.98]"
                   >
-                    Daftar Akun Mahasiswa
+                    Daftar Akun
                   </Link>
                   <Link
                     href="/login"
