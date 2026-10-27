@@ -1,138 +1,114 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-
-interface Particle {
-  x: number
-  y: number
-  vx: number
-  vy: number
-  radius: number
-  color: string
-  alpha: number
-  pulseSpeed: number
-}
+import React from 'react'
+import {
+  Ticket,
+  GraduationCap,
+  Calendar,
+  QrCode,
+  Trophy,
+  Megaphone,
+} from 'lucide-react'
 
 export function HeroParticles() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    // Hormati preferensi aksesibilitas pengguna
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (prefersReducedMotion) return
-
-    let animationFrameId: number
-    let width = (canvas.width = canvas.parentElement?.offsetWidth || window.innerWidth)
-    let height = (canvas.height = canvas.parentElement?.offsetHeight || 500)
-
-    // Palet warna partikel resmi (Biru Almamater #243B9B & Kuning Tiket #FFD23F)
-    const colors = [
-      'rgba(36, 59, 155, ',   // Biru Almamater
-      'rgba(255, 210, 63, ',  // Kuning Tiket
-      'rgba(31, 134, 199, ',  // Info Blue
-    ]
-
-    const particleCount = Math.min(Math.floor((width * height) / 18000), 45)
-    const particles: Particle[] = []
-
-    for (let i = 0; i < particleCount; i++) {
-      particles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.45,
-        vy: (Math.random() - 0.5) * 0.45,
-        radius: Math.random() * 2.2 + 1.2,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        alpha: Math.random() * 0.45 + 0.2,
-        pulseSpeed: Math.random() * 0.015 + 0.005,
-      })
-    }
-
-    const handleResize = () => {
-      if (!canvas || !canvas.parentElement) return
-      width = canvas.width = canvas.parentElement.offsetWidth
-      height = canvas.height = canvas.parentElement.offsetHeight
-    }
-
-    window.addEventListener('resize', handleResize)
-
-    let isVisible = true
-    const handleVisibilityChange = () => {
-      isVisible = !document.hidden
-    }
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-
-    const render = () => {
-      if (!isVisible) {
-        animationFrameId = requestAnimationFrame(render)
-        return
-      }
-
-      ctx.clearRect(0, 0, width, height)
-
-      // Gambar koneksi halus antar partikel yang berdekatan
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x
-          const dy = particles[i].y - particles[j].y
-          const dist = Math.sqrt(dx * dx + dy * dy)
-
-          if (dist < 110) {
-            const lineAlpha = (1 - dist / 110) * 0.12
-            ctx.beginPath()
-            ctx.moveTo(particles[i].x, particles[i].y)
-            ctx.lineTo(particles[j].x, particles[j].y)
-            ctx.strokeStyle = `rgba(36, 59, 155, ${lineAlpha})`
-            ctx.lineWidth = 0.8
-            ctx.stroke()
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 z-0 overflow-hidden select-none"
+      aria-hidden="true"
+    >
+      <style>{`
+        @keyframes floatCampus1 {
+          0%, 100% {
+            transform: translateY(0px) rotate(-6deg);
+          }
+          50% {
+            transform: translateY(-16px) rotate(4deg);
           }
         }
-      }
+        @keyframes floatCampus2 {
+          0%, 100% {
+            transform: translateY(0px) rotate(6deg) scale(1);
+          }
+          50% {
+            transform: translateY(-20px) rotate(-5deg) scale(1.04);
+          }
+        }
+        @keyframes floatCampus3 {
+          0%, 100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+          50% {
+            transform: translateY(-14px) rotate(-8deg);
+          }
+        }
+        .anim-campus-1 {
+          animation: floatCampus1 6.8s ease-in-out infinite;
+        }
+        .anim-campus-2 {
+          animation: floatCampus2 7.6s ease-in-out 0.8s infinite;
+        }
+        .anim-campus-3 {
+          animation: floatCampus3 8.2s ease-in-out 1.5s infinite;
+        }
+        .anim-campus-4 {
+          animation: floatCampus1 7.2s ease-in-out 2s infinite;
+        }
+        .anim-campus-5 {
+          animation: floatCampus2 8.4s ease-in-out 1.2s infinite;
+        }
+        .anim-campus-6 {
+          animation: floatCampus3 7.8s ease-in-out 0.4s infinite;
+        }
+      `}</style>
 
-      // Update dan gambar setiap partikel
-      for (const p of particles) {
-        p.x += p.vx
-        p.y += p.vy
+      {/* Soft Ambient Glow di atas (tanpa pola dot apapun) */}
+      <div className="absolute -top-24 left-1/2 -translate-x-1/2 h-72 w-[46rem] rounded-full bg-gradient-to-b from-primary/10 via-primary-soft/15 to-transparent blur-3xl pointer-events-none" />
 
-        // Pantul lembut di tepi batas canvas
-        if (p.x < 0) p.x = width
-        else if (p.x > width) p.x = 0
-        if (p.y < 0) p.y = height
-        else if (p.y > height) p.y = 0
+      {/* KLUSTER KANAN: Identitas Tiket & Kemahasiswaan */}
 
-        // Efek denyut alpha halus
-        p.alpha += Math.sin(Date.now() * p.pulseSpeed) * 0.004
-        const currentAlpha = Math.max(0.1, Math.min(0.65, p.alpha))
+      {/* 1. E-Tiket Digital (Kuning Tiket #FFD23F) */}
+      <div className="absolute top-[14%] right-[6%] sm:right-[10%] md:right-[14%]">
+        <div className="anim-campus-1 flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-[#FFD23F] text-[#14172B] shadow-[0_8px_20px_rgba(255,210,63,0.45)] border border-amber-300/60 transition-transform">
+          <Ticket className="h-5 w-5 sm:h-6 sm:w-6" />
+        </div>
+      </div>
 
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
-        ctx.fillStyle = `${p.color}${currentAlpha})`
-        ctx.fill()
-      }
+      {/* 2. Topi Toga Akademik (Biru Almamater #243B9B) */}
+      <div className="absolute top-[48%] right-[8%] sm:right-[12%] md:right-[16%]">
+        <div className="anim-campus-2 flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[0_8px_24px_rgba(36,59,155,0.35)] border border-primary/40 transition-transform">
+          <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6" />
+        </div>
+      </div>
 
-      animationFrameId = requestAnimationFrame(render)
-    }
+      {/* 3. QR Code Verifikasi Check-in (Hijau Sukses #0E8A6F) */}
+      <div className="absolute top-[76%] right-[5%] sm:right-[9%] md:right-[13%]">
+        <div className="anim-campus-3 flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-[#DDF5EE] text-[#0E8A6F] shadow-[0_8px_20px_rgba(14,138,111,0.25)] border border-[#0E8A6F]/25 dark:bg-[#0E8A6F]/20 dark:text-[#DDF5EE] transition-transform">
+          <QrCode className="h-5 w-5 sm:h-6 sm:w-6" />
+        </div>
+      </div>
 
-    render()
+      {/* KLUSTER KIRI: Identitas Agenda & Prestasi Kampus */}
 
-    return () => {
-      window.removeEventListener('resize', handleResize)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      cancelAnimationFrame(animationFrameId)
-    }
-  }, [])
+      {/* 4. Kalender Agenda Kegiatan (Card Bersih dengan Aksen Biru) */}
+      <div className="absolute top-[18%] left-[6%] sm:left-[10%] md:left-[14%]">
+        <div className="anim-campus-4 flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-card text-primary shadow-[0_8px_20px_rgba(36,59,155,0.18)] border border-border transition-transform">
+          <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
+        </div>
+      </div>
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-70 transition-opacity duration-1000"
-      aria-hidden="true"
-    />
+      {/* 5. Piala / Lomba & Kompetisi Mahasiswa (Gold/Amber Soft) */}
+      <div className="absolute top-[50%] left-[8%] sm:left-[12%] md:left-[16%]">
+        <div className="anim-campus-5 flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-[#FFEBD1] text-[#E07A00] shadow-[0_8px_20px_rgba(224,122,0,0.25)] border border-[#E07A00]/25 dark:bg-[#E07A00]/20 dark:text-[#FFEBD1] transition-transform">
+          <Trophy className="h-5 w-5 sm:h-6 sm:w-6" />
+        </div>
+      </div>
+
+      {/* 6. Pengumuman / Suara Kampus (Info Blue Soft) */}
+      <div className="absolute top-[78%] left-[5%] sm:left-[9%] md:left-[13%]">
+        <div className="anim-campus-6 flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-[#DFF0FB] text-[#1F86C7] shadow-[0_8px_20px_rgba(31,134,199,0.25)] border border-[#1F86C7]/25 dark:bg-[#1F86C7]/20 dark:text-[#DFF0FB] transition-transform">
+          <Megaphone className="h-5 w-5 sm:h-6 sm:w-6" />
+        </div>
+      </div>
+    </div>
   )
 }

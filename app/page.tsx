@@ -176,90 +176,92 @@ export default async function Home() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden container mx-auto px-4 pt-14 pb-12 sm:pt-20 sm:pb-16 text-center">
+        <section className="relative overflow-hidden isolate pt-14 pb-12 sm:pt-20 sm:pb-16 text-center">
           <HeroParticles />
-          <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl md:text-6xl text-foreground max-w-4xl mx-auto leading-tight">
-            Temukan dan Ikuti Berbagai <br className="hidden sm:inline" />
-            <span className="text-primary">Event Kampus Terbaik</span>
-          </h1>
+          <div className="container relative z-10 mx-auto px-4">
+            <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl md:text-6xl text-foreground max-w-4xl mx-auto leading-tight">
+              Temukan dan Ikuti Berbagai <br className="hidden sm:inline" />
+              <span className="text-primary">Event Kampus Terbaik</span>
+            </h1>
 
-          <p className="mx-auto mt-5 max-w-2xl text-base sm:text-lg text-muted-foreground leading-relaxed">
-            Satu sistem terintegrasi untuk mahasiswa, panitia pelaksana, dan pengelola kampus.
-            Daftar seminar, workshop, dan kompetisi secara instan dengan tiket digital ber-QR code.
-          </p>
+            <p className="mx-auto mt-5 max-w-2xl text-base sm:text-lg text-muted-foreground leading-relaxed">
+              Satu sistem terintegrasi untuk mahasiswa, panitia pelaksana, dan pengelola kampus.
+              Daftar seminar, workshop, dan kompetisi secara instan dengan tiket digital ber-QR code.
+            </p>
 
-          {/* Quick Search Bar */}
-          <form action="/events" method="GET" className="mx-auto mt-8 max-w-2xl">
-            <div className="flex items-center gap-2 rounded-2xl border border-border bg-card p-1.5 shadow-sm transition-all focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20">
-              <div className="flex items-center pl-3 text-muted-foreground">
-                <Search className="h-5 w-5" />
+            {/* Quick Search Bar */}
+            <form action="/events" method="GET" className="mx-auto mt-8 max-w-2xl">
+              <div className="flex items-center gap-2 rounded-2xl border border-border bg-card p-1.5 shadow-sm transition-all focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20">
+                <div className="flex items-center pl-3 text-muted-foreground">
+                  <Search className="h-5 w-5" />
+                </div>
+                <input
+                  type="text"
+                  name="q"
+                  placeholder="Cari seminar, workshop, lomba, atau lokasi kegiatan..."
+                  className="w-full bg-transparent px-2 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-5 py-2.5 text-xs sm:text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 active:scale-[0.98] cursor-pointer"
+                >
+                  <span>Cari Event</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
               </div>
-              <input
-                type="text"
-                name="q"
-                placeholder="Cari seminar, workshop, lomba, atau lokasi kegiatan..."
-                className="w-full bg-transparent px-2 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-5 py-2.5 text-xs sm:text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 active:scale-[0.98] cursor-pointer"
-              >
-                <span>Cari Event</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
+            </form>
+
+            {/* Popular Category Quick Pills */}
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+              <span className="text-xs text-muted-foreground font-medium mr-1">Kategori:</span>
+              {['Seminar', 'Workshop', 'Lomba', 'Pelatihan', 'Organisasi', 'Seni & Budaya'].map(
+                (cat) => (
+                  <Link
+                    key={cat}
+                    href={`/events?category=${encodeURIComponent(cat)}`}
+                    className="rounded-full border border-border bg-card/80 px-3 py-1 text-xs text-foreground/85 transition-colors hover:border-primary hover:text-primary hover:bg-primary-soft/40"
+                  >
+                    {cat}
+                  </Link>
+                )
+              )}
             </div>
-          </form>
 
-          {/* Popular Category Quick Pills */}
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-            <span className="text-xs text-muted-foreground font-medium mr-1">Kategori:</span>
-            {['Seminar', 'Workshop', 'Lomba', 'Pelatihan', 'Organisasi', 'Seni & Budaya'].map(
-              (cat) => (
-                <Link
-                  key={cat}
-                  href={`/events?category=${encodeURIComponent(cat)}`}
-                  className="rounded-full border border-border bg-card/80 px-3 py-1 text-xs text-foreground/85 transition-colors hover:border-primary hover:text-primary hover:bg-primary-soft/40"
-                >
-                  {cat}
-                </Link>
-              )
-            )}
-          </div>
-
-          {/* Primary Action Buttons */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
-            {user ? (
-              <>
-                <Link
-                  href="/events"
-                  className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-sm transition-all hover:bg-primary/90 active:scale-[0.98]"
-                >
-                  <span>Buka Katalog Lengkap</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href={dashboardUrl}
-                  className="inline-flex items-center justify-center h-11 px-6 rounded-xl border border-border bg-card text-foreground font-semibold text-sm shadow-xs transition-all hover:bg-muted active:scale-[0.98]"
-                >
-                  Ke Dashboard Saya
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/register"
-                  className="inline-flex items-center justify-center h-11 px-7 rounded-xl bg-[#FFD23F] text-[#14172B] font-semibold text-sm shadow-sm transition-all hover:brightness-95 active:scale-[0.98]"
-                >
-                  Daftar Akun Mahasiswa
-                </Link>
-                <Link
-                  href="/login"
-                  className="inline-flex items-center justify-center h-11 px-6 rounded-xl border border-border bg-card text-foreground font-semibold text-sm shadow-xs transition-all hover:bg-muted active:scale-[0.98]"
-                >
-                  Masuk ke Akun
-                </Link>
-              </>
-            )}
+            {/* Primary Action Buttons */}
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
+              {user ? (
+                <>
+                  <Link
+                    href="/events"
+                    className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-sm transition-all hover:bg-primary/90 active:scale-[0.98]"
+                  >
+                    <span>Buka Katalog Lengkap</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    href={dashboardUrl}
+                    className="inline-flex items-center justify-center h-11 px-6 rounded-xl border border-border bg-card text-foreground font-semibold text-sm shadow-xs transition-all hover:bg-muted active:scale-[0.98]"
+                  >
+                    Ke Dashboard Saya
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/register"
+                    className="inline-flex items-center justify-center h-11 px-7 rounded-xl bg-[#FFD23F] text-[#14172B] font-semibold text-sm shadow-sm transition-all hover:brightness-95 active:scale-[0.98]"
+                  >
+                    Daftar Akun Mahasiswa
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center justify-center h-11 px-6 rounded-xl border border-border bg-card text-foreground font-semibold text-sm shadow-xs transition-all hover:bg-muted active:scale-[0.98]"
+                  >
+                    Masuk ke Akun
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </section>
 
