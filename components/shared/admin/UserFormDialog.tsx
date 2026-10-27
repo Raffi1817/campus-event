@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -53,6 +53,24 @@ function UserFormModalContent({
 
   const isSelf = userToEdit?.id === currentAdminId
   const hasActiveEvents = (userToEdit?.active_events_count ?? 0) > 0
+
+  // Kontrol tombol Escape dan kunci scroll latar belakang saat dialog aktif
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isSubmitting) {
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = originalOverflow
+    }
+  }, [onClose, isSubmitting])
 
   const validate = () => {
     const errors: Record<string, string> = {}
@@ -107,6 +125,7 @@ function UserFormModalContent({
           },
           false
         )
+        toast.success('Data pengguna berhasil diperbarui')
         onClose()
       } else {
         const res = await createUserAction({
@@ -134,6 +153,7 @@ function UserFormModalContent({
           },
           true
         )
+        toast.success('Pengguna baru berhasil ditambahkan')
         onClose()
       }
     } catch {
@@ -144,18 +164,34 @@ function UserFormModalContent({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="w-full max-w-lg rounded-2xl border bg-background p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="user-form-dialog-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isSubmitting) {
+          onClose()
+        }
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg rounded-2xl border bg-background p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200"
+      >
         <div className="flex items-center justify-between border-b pb-3.5">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+            <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
               {isEditMode ? <Shield className="h-5 w-5" /> : <UserPlus className="h-5 w-5" />}
             </div>
             <div>
-              <h2 className="font-bold text-lg leading-tight text-foreground">
+              <h2
+                id="user-form-dialog-title"
+                className="font-bold text-lg leading-tight text-foreground"
+              >
                 {isEditMode ? 'Ubah Data Pengguna' : 'Tambah Pengguna Baru'}
               </h2>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {isEditMode
                   ? 'Perbarui informasi dan hak akses pengguna ini.'
                   : 'Daftarkan akun pengguna baru ke sistem.'}
@@ -163,10 +199,11 @@ function UserFormModalContent({
             </div>
           </div>
           <button
+            type="button"
             onClick={() => !isSubmitting && onClose()}
             disabled={isSubmitting}
-            className="text-muted-foreground hover:text-foreground rounded-lg p-1.5 transition-colors cursor-pointer"
-            aria-label="Tutup"
+            className="text-muted-foreground hover:text-foreground rounded-lg p-1.5 hover:bg-muted transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-hidden"
+            aria-label="Tutup form pengguna"
           >
             <X className="h-5 w-5" />
           </button>
@@ -186,8 +223,11 @@ function UserFormModalContent({
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Contoh: Budi Santoso"
               disabled={isSubmitting}
-              className={formErrors.fullName ? 'border-destructive' : ''}
+              className={`text-sm focus-visible:ring-2 focus-visible:ring-primary ${
+                formErrors.fullName ? 'border-destructive' : ''
+              }`}
               maxLength={100}
+              autoFocus
             />
             {formErrors.fullName && (
               <p className="text-[11px] text-destructive flex items-center gap-1 mt-0.5">
@@ -210,7 +250,9 @@ function UserFormModalContent({
               onChange={(e) => setNim(e.target.value)}
               placeholder="Contoh: 12345678"
               disabled={isSubmitting}
-              className={formErrors.nim ? 'border-destructive font-mono' : 'font-mono'}
+              className={`text-sm focus-visible:ring-2 focus-visible:ring-primary ${
+                formErrors.nim ? 'border-destructive font-mono' : 'font-mono'
+              }`}
               maxLength={20}
             />
             {formErrors.nim && (
@@ -221,12 +263,12 @@ function UserFormModalContent({
             )}
           </div>
 
-          {/* Email */}
+          {/* Email (Hanya saat create) */}
           <div className="space-y-1.5">
             <Label htmlFor="user-email" className="text-xs font-semibold flex items-center gap-1.5">
               <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-              <span>Alamat Email</span>
-              <span className="text-destructive">*</span>
+              <span>Email Akun</span>
+              {!isEditMode && <span className="text-destructive">*</span>}
             </Label>
             <Input
               id="user-email"
@@ -235,7 +277,9 @@ function UserFormModalContent({
               onChange={(e) => setEmail(e.target.value)}
               placeholder="contoh@example.com"
               disabled={isSubmitting || isEditMode}
-              className={`${formErrors.email ? 'border-destructive' : ''} ${
+              className={`text-sm focus-visible:ring-2 focus-visible:ring-primary ${
+                formErrors.email ? 'border-destructive' : ''
+              } ${
                 isEditMode ? 'bg-muted text-muted-foreground cursor-not-allowed' : ''
               }`}
             />
@@ -267,7 +311,9 @@ function UserFormModalContent({
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Minimal 8 karakter"
                 disabled={isSubmitting}
-                className={formErrors.password ? 'border-destructive' : ''}
+                className={`text-sm focus-visible:ring-2 focus-visible:ring-primary ${
+                  formErrors.password ? 'border-destructive' : ''
+                }`}
               />
               {formErrors.password && (
                 <p className="text-[11px] text-destructive flex items-center gap-1 mt-0.5">
@@ -278,37 +324,53 @@ function UserFormModalContent({
             </div>
           )}
 
-          {/* Role Selection */}
+          {/* Pilihan Role */}
           <div className="space-y-1.5">
-            <Label htmlFor="user-role" className="text-xs font-semibold flex items-center gap-1.5">
+            <Label className="text-xs font-semibold flex items-center gap-1.5">
               <Shield className="h-3.5 w-3.5 text-muted-foreground" />
-              <span>Peran (Role)</span>
+              <span>Role Pengguna</span>
               <span className="text-destructive">*</span>
             </Label>
 
             {isSelf ? (
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-xl text-xs text-amber-800 dark:text-amber-300">
-                <p className="font-semibold">Perlindungan Akun Sendiri:</p>
-                <p className="mt-0.5">Anda tidak dapat menurunkan role akun Administrator Anda sendiri.</p>
+              <div className="p-3 bg-muted/60 rounded-xl text-xs text-muted-foreground border">
+                Anda tidak dapat mengubah role akun Anda sendiri demi keamanan sistem.
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-2">
                 {(['MAHASISWA', 'PANITIA', 'ADMIN'] as UserRole[]).map((r) => {
                   const isSelected = role === r
+                  const isBlockedByEvents = isEditMode && hasActiveEvents && r !== 'PANITIA'
+
                   return (
                     <button
                       key={r}
                       type="button"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isBlockedByEvents}
                       onClick={() => setRole(r)}
-                      className={`py-2 px-3 rounded-xl border text-xs font-semibold transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                      className={`p-3 rounded-xl border text-left transition-all relative flex flex-col justify-between ${
                         isSelected
-                          ? 'border-primary bg-primary/10 text-primary shadow-xs'
-                          : 'border-slate-200 dark:border-slate-800 text-muted-foreground hover:bg-muted'
-                      }`}
+                          ? 'border-primary bg-primary/5 ring-1 ring-primary shadow-xs'
+                          : 'border-border hover:bg-muted/40'
+                      } ${isBlockedByEvents ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
-                      <span>{r}</span>
-                      {isSelected && <Check className="h-3.5 w-3.5 text-primary" />}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-foreground">
+                          {r}
+                        </span>
+                        {isSelected && (
+                          <div className="w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px]">
+                            <Check className="h-3 w-3" />
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground mt-1">
+                        {r === 'ADMIN'
+                          ? 'Akses penuh'
+                          : r === 'PANITIA'
+                          ? 'Kelola event'
+                          : 'Peserta event'}
+                      </span>
                     </button>
                   )
                 })}
@@ -316,8 +378,8 @@ function UserFormModalContent({
             )}
 
             {isEditMode && hasActiveEvents && role !== 'PANITIA' && (
-              <div className="p-3 mt-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-xl text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <div className="p-3 mt-2 bg-[#FFEBD1]/60 dark:bg-amber-950/30 border border-[#E07A00]/25 dark:border-amber-900/50 rounded-xl text-xs text-[#8A4B00] dark:text-amber-300 flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-[#E07A00]" />
                 <div>
                   <span className="font-semibold">Peringatan: </span>
                   Pengguna ini memiliki {userToEdit?.active_events_count} event aktif. Penurunan role akan ditolak oleh sistem sampai event tersebut selesai atau dibatalkan.
@@ -330,15 +392,18 @@ function UserFormModalContent({
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={onClose}
               disabled={isSubmitting}
+              className="text-xs h-9 px-4"
             >
               Batal
             </Button>
             <Button
               type="submit"
+              size="sm"
               disabled={isSubmitting}
-              className="gap-2 font-medium"
+              className="text-xs h-9 px-4 gap-2 font-semibold min-w-32 focus-visible:ring-2 focus-visible:ring-primary"
             >
               {isSubmitting ? (
                 <>
