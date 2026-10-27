@@ -285,23 +285,21 @@ export function ConfirmPaymentDialog({
 
             {/* Deskripsi & Konsekuensi Aksi */}
             <div
-              className={`rounded-xl p-3 text-xs flex items-start gap-2 border ${
+              className={`rounded-xl p-2.5 px-3 text-xs flex items-center gap-2 border ${
                 actionType === 'APPROVE'
                   ? 'bg-[#DDF5EE]/50 text-[#0A5F4D] border-[#0E8A6F]/20 dark:bg-emerald-950/30 dark:text-emerald-300'
                   : 'bg-[#FDE3E7]/50 text-[#9B1C31] border-[#D1344B]/20 dark:bg-rose-950/30 dark:text-rose-300'
               }`}
             >
               {actionType === 'APPROVE' ? (
-                <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-[#0E8A6F] dark:text-emerald-400" />
+                <ShieldCheck className="h-4 w-4 shrink-0 text-[#0E8A6F] dark:text-emerald-400" />
               ) : (
-                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-[#D1344B] dark:text-rose-400" />
+                <AlertTriangle className="h-4 w-4 shrink-0 text-[#D1344B] dark:text-rose-400" />
               )}
-              <span className="leading-relaxed">
+              <span className="leading-normal">
                 {actionType === 'APPROVE'
-                  ? proofUrl
-                    ? 'Pastikan nominal dan tanggal struk transfer sesuai dengan rekening panitia. Setelah disetujui, tiket barcode resmi akan langsung diterbitkan secara otomatis untuk mahasiswa.'
-                    : 'Pastikan uang tunai telah diterima secara fisik dari mahasiswa di lokasi. Setelah disetujui, tiket resmi akan langsung terbit.'
-                  : 'Menolak pembayaran akan mengubah status pendaftaran menjadi DITOLAK (FAILED). Mahasiswa akan menerima pemberitahuan dan dapat mengunggah bukti baru atau bayar ulang.'}
+                  ? 'Tiket barcode resmi akan langsung terbit otomatis setelah disetujui.'
+                  : 'Status pendaftaran akan ditolak dan mahasiswa dapat membayar ulang.'}
               </span>
             </div>
 
