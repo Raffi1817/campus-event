@@ -32,6 +32,13 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
   const [isDeleting, setIsDeleting] = useState(false)
 
   // Tutup modal form atau konfirmasi hapus dengan tombol Escape dan kontrol scroll body
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setEditingId(null)
+    setName('')
+    setDescription('')
+  }
+
   useEffect(() => {
     if (!isModalOpen && !categoryToDelete) return
 
@@ -67,13 +74,6 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
     setName(cat.name)
     setDescription(cat.description || '')
     setIsModalOpen(true)
-  }
-
-  const closeModal = () => {
-    setIsModalOpen(false)
-    setEditingId(null)
-    setName('')
-    setDescription('')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

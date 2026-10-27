@@ -102,57 +102,59 @@ export function AdminReportsView({
   return (
     <div className="space-y-6">
       {/* Tab Navigasi Laporan */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-3 print:hidden">
-        <div className="flex items-center gap-2">
-          <Button
-            variant={activeTab === 'EVENTS' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveTab('EVENTS')}
-            className="text-xs gap-1.5"
-          >
-            <Calendar className="h-3.5 w-3.5" />
-            <span>Rekapitulasi Event ({events.length})</span>
-          </Button>
-          <Button
-            variant={activeTab === 'CATEGORIES' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveTab('CATEGORIES')}
-            className="text-xs gap-1.5"
-          >
-            <Layers className="h-3.5 w-3.5" />
-            <span>Performa Kategori ({categories.length})</span>
-          </Button>
-          <Button
-            variant={activeTab === 'PAYMENTS' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveTab('PAYMENTS')}
-            className="text-xs gap-1.5"
-          >
-            <CreditCard className="h-3.5 w-3.5" />
-            <span>Metode Pembayaran</span>
-          </Button>
-        </div>
+      <div className="border-b pb-3 print:hidden">
+        <div className="flex items-center justify-between gap-4 overflow-x-auto pb-1 sm:pb-0">
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant={activeTab === 'EVENTS' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setActiveTab('EVENTS')}
+              className="text-xs gap-1.5 shrink-0 whitespace-nowrap"
+            >
+              <Calendar className="h-3.5 w-3.5" />
+              <span>Rekapitulasi Event ({events.length})</span>
+            </Button>
+            <Button
+              variant={activeTab === 'CATEGORIES' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setActiveTab('CATEGORIES')}
+              className="text-xs gap-1.5 shrink-0 whitespace-nowrap"
+            >
+              <Layers className="h-3.5 w-3.5" />
+              <span>Performa Kategori ({categories.length})</span>
+            </Button>
+            <Button
+              variant={activeTab === 'PAYMENTS' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setActiveTab('PAYMENTS')}
+              className="text-xs gap-1.5 shrink-0 whitespace-nowrap"
+            >
+              <CreditCard className="h-3.5 w-3.5" />
+              <span>Metode Pembayaran</span>
+            </Button>
+          </div>
 
-        <div className="flex items-center gap-2 print:hidden">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrint}
-            className="text-xs gap-1.5"
-          >
-            <Printer className="h-3.5 w-3.5" />
-            <span>Cetak Laporan</span>
-          </Button>
-          <a href="/admin/reports/export" download className="inline-flex">
+          <div className="flex items-center gap-2 shrink-0 pl-2 sm:pl-0 border-l border-border/50 sm:border-l-0">
             <Button
               variant="outline"
               size="sm"
-              className="text-xs gap-1.5"
+              onClick={handlePrint}
+              className="text-xs gap-1.5 shrink-0 whitespace-nowrap"
             >
-              <Download className="h-3.5 w-3.5 text-primary" />
-              <span>Unduh CSV</span>
+              <Printer className="h-3.5 w-3.5" />
+              <span>Cetak Laporan</span>
             </Button>
-          </a>
+            <a href="/admin/reports/export" download className="inline-flex shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs gap-1.5 shrink-0 whitespace-nowrap"
+              >
+                <Download className="h-3.5 w-3.5 text-primary" />
+                <span>Unduh CSV</span>
+              </Button>
+            </a>
+          </div>
         </div>
       </div>
 
