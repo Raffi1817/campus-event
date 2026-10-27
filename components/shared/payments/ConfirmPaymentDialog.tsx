@@ -109,7 +109,7 @@ export function ConfirmPaymentDialog({
         }
       case 'E_WALLET':
         return {
-          label: 'E-Wallet / QRIS',
+          label: 'E-Wallet',
           icon: Smartphone,
           className:
             'text-[#0A5F4D] dark:text-emerald-400 bg-[#DDF5EE] dark:bg-emerald-950/40 border border-[#0E8A6F]/20 dark:border-emerald-800/40',

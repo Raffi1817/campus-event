@@ -18,11 +18,24 @@ interface CategoryOption {
 interface EventCatalogProps {
   events: EventWithStats[]
   categories: CategoryOption[]
+  initialSearch?: string
+  initialCategoryName?: string
 }
 
-export function EventCatalog({ events, categories }: EventCatalogProps) {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string>('ALL')
+export function EventCatalog({
+  events,
+  categories,
+  initialSearch = '',
+  initialCategoryName = '',
+}: EventCatalogProps) {
+  const matchingCat = initialCategoryName
+    ? categories.find(
+        (c) => c.name.toLowerCase() === initialCategoryName.toLowerCase()
+      )?.id
+    : undefined
+
+  const [searchQuery, setSearchQuery] = useState(initialSearch)
+  const [selectedCategory, setSelectedCategory] = useState<string>(matchingCat || 'ALL')
   const [statusFilter, setStatusFilter] = useState<'ACTIVE' | 'ARCHIVE' | 'ALL'>('ACTIVE')
   const [priceFilter, setPriceFilter] = useState<'ALL' | 'FREE' | 'PAID'>('ALL')
 
@@ -260,7 +273,7 @@ export function EventCatalog({ events, categories }: EventCatalogProps) {
               >
                 <div>
                   {/* Poster Header atau Fallback Banner */}
-                  <div className="relative aspect-[16/9] w-full bg-gradient-to-br from-indigo-500/20 via-primary/10 to-purple-500/20 flex items-center justify-center overflow-hidden border-b">
+                  <div className="relative aspect-[16/9] w-full bg-primary-soft/30 flex items-center justify-center overflow-hidden border-b">
                     {ev.poster_url ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img

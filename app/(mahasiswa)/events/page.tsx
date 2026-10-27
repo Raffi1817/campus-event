@@ -6,8 +6,16 @@ import { EventCatalog } from '@/components/shared/events'
 
 export const instant = false
 
-export default async function EventsCatalogPage() {
+interface EventsCatalogPageProps {
+  searchParams?: Promise<{
+    q?: string
+    category?: string
+  }>
+}
+
+export default async function EventsCatalogPage({ searchParams }: EventsCatalogPageProps) {
   await connection()
+  const resolvedParams = searchParams ? await searchParams : {}
   const supabase = await createClient()
   const {
     data: { user },
@@ -36,7 +44,7 @@ export default async function EventsCatalogPage() {
     .order('name', { ascending: true })
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar
         user={{
           fullName: profile?.full_name || 'Pengguna',
@@ -48,6 +56,8 @@ export default async function EventsCatalogPage() {
         <EventCatalog
           events={events || []}
           categories={categories || []}
+          initialSearch={resolvedParams.q || ''}
+          initialCategoryName={resolvedParams.category || ''}
         />
       </main>
     </div>

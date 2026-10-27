@@ -21,7 +21,6 @@ import {
   Upload,
   Copy,
   Check,
-  QrCode,
   Eye,
   Trash2,
 } from 'lucide-react'
@@ -246,8 +245,8 @@ export function PaymentDialog({
     },
     {
       id: 'E_WALLET',
-      title: 'E-Wallet / QRIS',
-      desc: 'Kirim via GoPay, OVO, Dana atau scan QRIS & unggah bukti tangkapan layar transaksi.',
+      title: 'E-Wallet',
+      desc: 'Kirim via GoPay, OVO, atau Dana & unggah bukti tangkapan layar transaksi.',
       badge: 'Verifikasi Panitia',
       badgeClass:
         'bg-[#FFEBD1] text-[#8A4B00] border border-[#E07A00]/25 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/40',
@@ -460,8 +459,8 @@ export function PaymentDialog({
             {selectedMethod === 'E_WALLET' && (
               <div className="rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/50 dark:bg-emerald-950/30 p-4 space-y-3 animate-in fade-in duration-150">
                 <div className="flex items-center gap-2 text-xs font-bold text-emerald-950 dark:text-emerald-200">
-                  <QrCode className="h-4 w-4 shrink-0 text-[#0E8A6F] dark:text-emerald-400" />
-                  <span>QRIS & Nomor E-Wallet Panitia:</span>
+                  <Smartphone className="h-4 w-4 shrink-0 text-[#0E8A6F] dark:text-emerald-400" />
+                  <span>Nomor E-Wallet Panitia:</span>
                 </div>
                 <div className="bg-background rounded-lg p-3.5 border shadow-xs space-y-2.5 text-xs">
                   <div className="flex items-center justify-between gap-3">
